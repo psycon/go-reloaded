@@ -166,7 +166,7 @@
 4. **Edge Cases**: Focus on boundaries (zero values, empty modifiers, consecutive punctuation)
 5. **Context Sensitivity**: Tests that validate context awareness (quotes, modifiers with numbers, a/an before modified words)
 
-### Test 1: Mixed Case Transformations
+<span style="color: #FFD700;">### Test 1: Mixed Case Transformations</span>
 **Input:**
 ```
 it (cap) was the best of times, it was the worst of times (up) , it was the age of wisdom, it was the age of foolishness (cap, 6)
@@ -179,7 +179,7 @@ It was the best of times, it was the worst of TIMES, it was the age of wisdom, I
 
 ---
 
-### Test 2: Hexadecimal and Binary Conversions
+<span style="color: #FFD700;">### Test 2: Hexadecimal and Binary Conversions</span>
 **Input:**
 ```
 Simply add 42 (hex) and 10 (bin) and you will see the result is 68.
@@ -192,7 +192,7 @@ Simply add 66 and 2 and you will see the result is 68.
 
 ---
 
-### Test 3: A to An Correction
+<span style="color: #FFD700;">### Test 3: A to An Correction</span>
 **Input:**
 ```
 There is no greater agony than bearing a untold story inside you.
@@ -205,7 +205,7 @@ There is no greater agony than bearing an untold story inside you.
 
 ---
 
-### Test 4: Punctuation Spacing
+<span style="color: #FFD700;">### Test 4: Punctuation Spacing</span>
 **Input:**
 ```
 Punctuation tests are ... kinda boring ,what do you think ?
@@ -218,7 +218,7 @@ Punctuation tests are... kinda boring, what do you think?
 
 ---
 
-### Test 5: Quote Handling (Single Word)
+<span style="color: #FFD700;">### Test 5: Quote Handling (Single Word)</span>
 **Input:**
 ```
 I am exactly how they describe me: ' awesome '
@@ -231,7 +231,7 @@ I am exactly how they describe me: 'awesome'
 
 ---
 
-### Test 6: Quote Handling (Multiple Words)
+<span style="color: #FFD700;">### Test 6: Quote Handling (Multiple Words)</span>
 **Input:**
 ```
 As Elton John said: ' I am the most well-known homosexual in the world '
@@ -246,7 +246,7 @@ As Elton John said: 'I am the most well-known homosexual in the world'
 
 ## Advanced Test Cases (Tricky Scenarios)
 
-### Test 7: Multiple Modifiers in Sequence
+<span style="color: #FFD700;">### Test 7: Multiple Modifiers in Sequence</span>
 **Input:**
 ```
 the word (up) was then (cap) followed by another (low) transformation and FF (hex) things.
@@ -259,7 +259,7 @@ the WORD was then Followed by another transformation and 255 things.
 
 ---
 
-### Test 8: Modifier with Number affecting Multiple Words + Punctuation
+<span style="color: #FFD700;">### Test 8: Modifier with Number affecting Multiple Words + Punctuation</span>
 **Input:**
 ```
 it was the BEST OF TIMES (low, 3) ! what a story .
@@ -272,7 +272,7 @@ it was the best of times! what a story.
 
 ---
 
-### Test 9: Edge Case - A/An with Punctuation and Quotes
+<span style="color: #FFD700;">### Test 9: Edge Case - A/An with Punctuation and Quotes</span>
 **Input:**
 ```
 She found a apple , a orange and a ' honest ' person .
@@ -285,7 +285,7 @@ She found an apple, an orange and an 'honest' person.
 
 ---
 
-### Test 10: Complex Punctuation Groups
+<span style="color: #FFD700;">### Test 10: Complex Punctuation Groups</span>
 **Input:**
 ```
 Wait ... what ! ? Really ? ! I can not believe it ! ! !
@@ -298,7 +298,7 @@ Wait... what!? Really?! I can not believe it!!!
 
 ---
 
-### Test 11: Binary/Hex Edge Cases
+<span style="color: #FFD700;">### Test 11: Binary/Hex Edge Cases</span>
 **Input:**
 ```
 The values 0 (bin) and 0 (hex) are equal , but 1111 (bin) equals F (hex) which is 15 (hex) .
@@ -313,7 +313,7 @@ The values 0 and 0 are equal, but 15 equals 15 which is 15.
 
 ## Comprehensive Test Paragraph
 
-### Test 12: Large Text with Multiple Rules
+<span style="color: #FFD700;">### Test 12: Large Text with Multiple Rules</span>
 **Input:**
 ```
 it (cap) was a amazing DAY (low) ! the sun was shining and the temperature reached 1F (hex) degrees . I went to the store , bought 11 (bin) apples and A (up) orange . the shopkeeper said : ' you are a honest customer ' . when i got HOME (low, 2) , i realized that 101 (bin) plus A (hex) equals F (hex) ! what a DISCOVERY (cap) ... i could not BELIEVE IT (low, 2) ! ? this was the best day EVER (cap, 2) .
