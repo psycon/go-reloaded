@@ -74,6 +74,63 @@
 
 ---
 
+graph TB
+    Start([START]) --> Init[Initialize Buffer & State]
+    Init --> Read{Read Next Token}
+    
+    Read -->|Word| Word[READING_WORD State]
+    Read -->|Space| Space[Process Space]
+    Read -->|Quote '| Quote[QUOTE_TOGGLE State]
+    Read -->|Punctuation| Punct[PUNCTUATION State]
+    Read -->|EOF| End([END - Write Output])
+    
+    Word --> CheckMod{Is Modifier?<br/>hex/bin/up/low/cap}
+    
+    CheckMod -->|Yes| ApplyMod[Apply Transformation<br/>to Previous Word/s]
+    CheckMod -->|No| CheckAN{Check A/An Rule}
+    
+    ApplyMod --> Buffer[Update Buffer]
+    
+    CheckAN -->|"'a' + vowel/h"| FixAN[Change 'a' to 'an']
+    CheckAN -->|No change needed| Buffer
+    
+    FixAN --> Buffer
+    
+    Buffer --> Output1[Add to Output]
+    
+    Space -->|Inside quotes| NoSpace[Skip Space]
+    Space -->|Normal| AddSpace[Add Space to Output]
+    
+    NoSpace --> Read
+    AddSpace --> Read
+    
+    Quote -->|First '| OpenQ[Mark Quote Start]
+    Quote -->|Second '| CloseQ[Mark Quote End<br/>Format Words]
+    
+    OpenQ --> Read
+    CloseQ --> Output2[Add to Output]
+    
+    Punct --> Group{Punctuation<br/>Group?<br/>... or !?}
+    
+    Group -->|Yes| Combine[Combine & Format<br/>No internal spaces]
+    Group -->|No| Single[Format Single<br/>Stick to previous word]
+    
+    Combine --> Output3[Add to Output]
+    Single --> Output3
+    
+    Output1 --> Read
+    Output2 --> Read
+    Output3 --> Read
+    
+    style Start fill:#90EE90
+    style End fill:#FFB6C1
+    style CheckMod fill:#FFE4B5
+    style ApplyMod fill:#87CEEB
+    style CheckAN fill:#DDA0DD
+    style FixAN fill:#F0E68C
+    style Group fill:#FFE4B5
+    style Quote fill:#98FB98
+
 ---
 
 ## 3. Καταγραφή των Κανόνων
@@ -154,6 +211,14 @@
 # Golden Test Set (Success Test Cases)
 
 ## Basic Functional Tests (από Audit Examples)
+
+## Notes on Testing Strategy
+
+1. **Isolation Tests**: Tests 1-6 validate individual rules
+2. **Integration Tests**: Tests 7-11 validate rule combinations
+3. **Comprehensive Test**: Test 12 validates real-world usage with multiple rules interacting
+4. **Edge Cases**: Focus on boundaries (zero values, empty modifiers, consecutive punctuation)
+5. **Context Sensitivity**: Tests that validate context awareness (quotes, modifiers with numbers, a/an before modified words)
 
 ### Test 1: Mixed Case Transformations
 **Input:**
@@ -327,11 +392,3 @@ It was an amazing day! the sun was shining and the temperature reached 31 degree
 - Mix of all rules in complex text
 
 ---
-
-## Notes on Testing Strategy
-
-1. **Isolation Tests**: Tests 1-6 validate individual rules
-2. **Integration Tests**: Tests 7-11 validate rule combinations
-3. **Comprehensive Test**: Test 12 validates real-world usage with multiple rules interacting
-4. **Edge Cases**: Focus on boundaries (zero values, empty modifiers, consecutive punctuation)
-5. **Context Sensitivity**: Tests that validate context awareness (quotes, modifiers with numbers, a/an before modified words)
