@@ -8,7 +8,13 @@
 
 Η πρόκληση είναι να γίνει αυτό αποδοτικά, με σωστή διαχείριση του context και με τρόπο που να είναι εύκολα επεκτάσιμος και maintainable.
 
-![FSM Diagram](https://drive.google.com/uc?export=view&id=1gz8G4Fmx9gY_JWBjgOG3fjxFV57h_8Bj)
+<div align="center">
+
+### FSM Architecture Diagram
+
+<img src="https://drive.google.com/uc?export=view&id=1gz8G4Fmx9gY_JWBjgOG3fjxFV57h_8Bj" alt="FSM Flow Diagram" width="800"/>
+
+</div>
 
 
 <span style="color: #CCFF99;">## 2. Σύγκριση Αρχιτεκτονικών</span>
