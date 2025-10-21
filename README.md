@@ -12,7 +12,7 @@
 
 ### FSM Architecture Diagram
 
-<img src="https://drive.google.com/uc?export=view&id=1gz8G4Fmx9gY_JWBjgOG3fjxFV57h_8Bj" alt="FSM Flow Diagram" width="800"/>
+<img src="assets/fsm flow diagram.png" alt="FSM Flow Diagram" width="800"/>
 
 </div>
 
