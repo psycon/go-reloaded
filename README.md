@@ -1,4 +1,4 @@
-<span style="color: #FF0000;"># Text Editor Project - Analysis Document</span>
+<span style="color: #FF0000;"># Auditor/Educational focused Document - Text Editor Project</span>
 
 <span style="color: #CCFF99;">## 1. Περιγραφή του Προβλήματος
 
