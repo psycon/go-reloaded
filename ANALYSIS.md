@@ -1,0 +1,1 @@
+Developer-focused - Text Editor Project
