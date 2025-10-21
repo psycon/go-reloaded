@@ -8,6 +8,8 @@
 
 Η πρόκληση είναι να γίνει αυτό αποδοτικά, με σωστή διαχείριση του context και με τρόπο που να είναι εύκολα επεκτάσιμος και maintainable.
 
+![FSM Diagram](./images/fsm-diagram.png)
+
 ## 2. Σύγκριση Αρχιτεκτονικών
 
 ### Pipeline Architecture
@@ -71,65 +73,6 @@
 6. **Learning Value**: Πιο εκπαιδευτικό και επαγγελματικό approach
 
 Το **tradeoff** της πολυπλοκότητας αξίζει για τα benefits που προσφέρει το FSM σε αυτό το project.
-
----
-
-graph TB
-    Start([START]) --> Init[Initialize Buffer & State]
-    Init --> Read{Read Next Token}
-    
-    Read -->|Word| Word[READING_WORD State]
-    Read -->|Space| Space[Process Space]
-    Read -->|Quote '| Quote[QUOTE_TOGGLE State]
-    Read -->|Punctuation| Punct[PUNCTUATION State]
-    Read -->|EOF| End([END - Write Output])
-    
-    Word --> CheckMod{Is Modifier?<br/>hex/bin/up/low/cap}
-    
-    CheckMod -->|Yes| ApplyMod[Apply Transformation<br/>to Previous Word/s]
-    CheckMod -->|No| CheckAN{Check A/An Rule}
-    
-    ApplyMod --> Buffer[Update Buffer]
-    
-    CheckAN -->|"'a' + vowel/h"| FixAN[Change 'a' to 'an']
-    CheckAN -->|No change needed| Buffer
-    
-    FixAN --> Buffer
-    
-    Buffer --> Output1[Add to Output]
-    
-    Space -->|Inside quotes| NoSpace[Skip Space]
-    Space -->|Normal| AddSpace[Add Space to Output]
-    
-    NoSpace --> Read
-    AddSpace --> Read
-    
-    Quote -->|First '| OpenQ[Mark Quote Start]
-    Quote -->|Second '| CloseQ[Mark Quote End<br/>Format Words]
-    
-    OpenQ --> Read
-    CloseQ --> Output2[Add to Output]
-    
-    Punct --> Group{Punctuation<br/>Group?<br/>... or !?}
-    
-    Group -->|Yes| Combine[Combine & Format<br/>No internal spaces]
-    Group -->|No| Single[Format Single<br/>Stick to previous word]
-    
-    Combine --> Output3[Add to Output]
-    Single --> Output3
-    
-    Output1 --> Read
-    Output2 --> Read
-    Output3 --> Read
-    
-    style Start fill:#90EE90
-    style End fill:#FFB6C1
-    style CheckMod fill:#FFE4B5
-    style ApplyMod fill:#87CEEB
-    style CheckAN fill:#DDA0DD
-    style FixAN fill:#F0E68C
-    style Group fill:#FFE4B5
-    style Quote fill:#98FB98
 
 ---
 
