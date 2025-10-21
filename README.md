@@ -8,9 +8,7 @@
 
 Η πρόκληση είναι να γίνει αυτό αποδοτικά, με σωστή διαχείριση του context και με τρόπο που να είναι εύκολα επεκτάσιμος και maintainable.
 
-<div align="center">
-  <img src="https://drive.google.com/file/d/1gz8G4Fmx9gY_JWBjgOG3fjxFV57h_8Bj/view?usp=sharing" alt="FSM Diagram" width="800"/>
-</div>
+![FSM Diagram](https://drive.google.com/uc?export=view&id=1gz8G4Fmx9gY_JWBjgOG3fjxFV57h_8Bj)
 
 
 <span style="color: #CCFF99;">## 2. Σύγκριση Αρχιτεκτονικών</span>
