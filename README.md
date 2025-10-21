@@ -64,7 +64,7 @@
 - Χρειάζεται προσεκτική σκέψη για τα state transitions
 - Harder to modify μετά την αρχική υλοποίηση
 
-### Προσωπική Επιλογή: FSM 
+<span style="color: #FF0000;">### Προσωπική Επιλογή: FSM </span>
 
 **Γιατί FSM:**
 
