@@ -9,7 +9,7 @@
 Η πρόκληση είναι να γίνει αυτό αποδοτικά, με σωστή διαχείριση του context και με τρόπο που να είναι εύκολα επεκτάσιμος και maintainable.
 
 <div align="center">
-  <img src="https://drive.google.com/file/d/1gz8G4Fmx9gY_JWBjgOG3fjxFV57h_8Bj/view?usp=sharing" alt="FSM Diagram" width="800"/>
+  <img src="assets/fsm-diagram.png" alt="FSM Diagram" width="800"/>
 </div>
 
 
