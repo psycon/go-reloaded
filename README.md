@@ -1,6 +1,6 @@
-# Text Editor Project - Analysis Document
+<span style="color: #FF0000;"># Text Editor Project - Analysis Document</span>
 
-## 1. Περιγραφή του Προβλήματος
+<span style="color: #CCFF99;">## 1. Περιγραφή του Προβλήματος
 
 Το πρόβλημα αφορά τη δημιουργία ενός εργαλείου επεξεργασίας κειμένου που διαβάζει ένα αρχείο εισόδου, εφαρμόζει μια σειρά από μετασχηματισμούς και κανόνες μορφοποίησης, και γράφει το αποτέλεσμα σε αρχείο εξόδου.
 
@@ -13,7 +13,7 @@
 </div>
 
 
-## 2. Σύγκριση Αρχιτεκτονικών
+<span style="color: #CCFF99;">## 2. Σύγκριση Αρχιτεκτονικών</span>
 
 ### Pipeline Architecture
 
@@ -79,7 +79,7 @@
 
 ---
 
-## 3. Καταγραφή των Κανόνων
+<span style="color: #CCFF99;">## 3. Καταγραφή των Κανόνων</span>
 
 ### 3.1 Αριθμητικοί Μετασχηματισμοί
 
@@ -154,7 +154,7 @@
 ---
 
 
-# Golden Test Set (Success Test Cases)
+<span style="color: #CCFF99;"># Golden Test Set (Success Test Cases)</span>
 
 ## Basic Functional Tests (από Audit Examples)
 
