@@ -2,41 +2,11 @@
 
 ## Overview
 
-This project implements a text processing tool that reads an input file, applies a series of transformations and formatting rules, and writes the result to an output file.
-
-The program recognizes special modifiers within the text (e.g., `(hex)`, `(up)`, `(cap)`) and applies the corresponding transformations to previous words. Additionally, it automatically corrects punctuation, spacing around punctuation marks, and handles special cases such as quotes and article correction (a/an).
+A text processing tool that reads an input file, applies transformations and formatting rules, and writes the result to an output file using **FSM (Finite State Machine) architecture**.
 
 ---
 
-## Features
-
-✅ **Number Base Conversions**
-- Hexadecimal to Decimal: `1E (hex)` → `30`
-- Binary to Decimal: `10 (bin)` → `2`
-
-✅ **Case Transformations**
-- Uppercase: `go (up)` → `GO`
-- Lowercase: `SHOUTING (low)` → `shouting`
-- Capitalize: `bridge (cap)` → `Bridge`
-
-✅ **Batch Transformations**
-- Apply to N words: `exciting (up, 2)` → `SO EXCITING`
-
-✅ **Smart Punctuation**
-- Basic spacing: `there ,and` → `there, and`
-- Punctuation groups: `. . .` → `...`
-
-✅ **Quote Handling**
-- Single word: `' awesome '` → `'awesome'`
-- Multiple words: `' I am great '` → `'I am great'`
-
-✅ **Article Correction**
-- a → an: `a amazing` → `an amazing`
-- Before h: `a honest` → `an honest`
-
----
-
-## Usage
+## Quick Start
 
 ```bash
 go run . input.txt output.txt
@@ -44,7 +14,7 @@ go run . input.txt output.txt
 
 ### Example
 
-**Input file (sample.txt):**
+**Input (sample.txt):**
 ```
 it (cap) was the best of times, it was the worst of times (up)
 ```
@@ -54,131 +24,21 @@ it (cap) was the best of times, it was the worst of times (up)
 go run . sample.txt result.txt
 ```
 
-**Output file (result.txt):**
+**Output (result.txt):**
 ```
 It was the best of times, it was the worst of TIMES
 ```
 
 ---
 
-## Transformation Rules
+## Key Features
 
-### 1. Number Base Conversions
-
-#### `(hex)` - Hexadecimal to Decimal
-Converts the previous word from hexadecimal to decimal.
-
-**Examples:**
-- `"1E (hex) files"` → `"30 files"`
-- `"FF (hex) is max"` → `"255 is max"`
-
-#### `(bin)` - Binary to Decimal
-Converts the previous word from binary to decimal.
-
-**Examples:**
-- `"10 (bin) years"` → `"2 years"`
-- `"1010 (bin) equals"` → `"10 equals"`
-
----
-
-### 2. Case Transformations
-
-#### `(up)` - Uppercase
-Converts the previous word to UPPERCASE.
-
-**Example:**
-- `"go (up) now"` → `"GO now"`
-
-#### `(low)` - Lowercase
-Converts the previous word to lowercase.
-
-**Example:**
-- `"SHOUTING (low)"` → `"shouting"`
-
-#### `(cap)` - Capitalize
-Capitalizes only the first letter of the previous word.
-
-**Example:**
-- `"bridge (cap)"` → `"Bridge"`
-
----
-
-### 3. Batch Transformations
-
-#### `(up, N)` - Uppercase N Words
-Converts the N previous words to UPPERCASE.
-
-**Example:**
-- `"so exciting (up, 2)"` → `"SO EXCITING"`
-
-#### `(low, N)` - Lowercase N Words
-Converts the N previous words to lowercase.
-
-**Example:**
-- `"IT WAS THE (low, 3)"` → `"it was the"`
-
-#### `(cap, N)` - Capitalize N Words
-Capitalizes the N previous words.
-
-**Example:**
-- `"age of foolishness (cap, 3)"` → `"Age Of Foolishness"`
-
----
-
-### 4. Punctuation Rules
-
-#### Basic Punctuation: `. , ! ? : ;`
-Sticks to the previous word (no space before), space after.
-
-**Examples:**
-- `"there ,and then"` → `"there, and then"`
-- `"Hello !"` → `"Hello!"`
-
-#### Punctuation Groups: `...` `!?` etc.
-Groups of punctuation marks stay together without internal spaces.
-
-**Examples:**
-- `"thinking . . ."` → `"thinking..."`
-- `"Really ! ?"` → `"Really!?"`
-
----
-
-### 5. Quote Handling: `'`
-
-#### Single Word
-Quotes stick to the left and right of the word.
-
-**Example:**
-- `"I am: ' awesome '"` → `"I am: 'awesome'"`
-
-#### Multiple Words
-Quotes stick to the first and last word.
-
-**Example:**
-- `"' I am the best '"` → `"'I am the best'"`
-
----
-
-### 6. Article Correction: a → an
-
-The article "a" becomes "an" if the next word starts with a vowel (a, e, i, o, u) or 'h'.
-
-**Examples:**
-- `"a amazing"` → `"an amazing"`
-- `"a honest"` → `"an honest"`
-- `"a book"` → `"a book"` (no change)
-
----
-
-## Testing
-
-The project includes comprehensive test cases covering:
-- Individual rule validation
-- Rule combination scenarios
-- Edge cases and tricky scenarios
-- Real-world text with multiple rules
-
-For detailed test cases and expected outputs, see the **Golden Test Set** in `ANALYSIS.md`.
+- **Number base conversions**: `(hex)`, `(bin)`
+- **Case transformations**: `(up)`, `(low)`, `(cap)`
+- **Batch operations**: `(up, N)` - apply to N previous words
+- **Smart punctuation**: Automatic spacing and grouping
+- **Quote handling**: Single and multiple word quotes
+- **Article correction**: `a` → `an` before vowels/h
 
 ---
 
@@ -186,27 +46,76 @@ For detailed test cases and expected outputs, see the **Golden Test Set** in `AN
 
 ```
 .
-├── README.md           # Project overview (this file)
-├── ANALYSIS.md         # Architecture analysis and test cases
-├── main.go             # Entry point
-├── fsm/                # FSM implementation
-├── transforms/         # Transformation logic
-├── formatters/         # Formatting rules
-└── tests/              # Unit tests
+├── README.md              # Project overview (this file)
+├── docs/
+│   └── ANALYSIS.md        # Architecture analysis & test cases
+├── assets/
+│   └── fsm flow diagram.png
+├── main.go                # Entry point
+├── fsm/                   # FSM state machine (orchestration)
+│   ├── fsm.go
+│   ├── states.go
+│   └── transitions.go
+├── transforms/            # Transformation logic (pure functions)
+│   ├── numbers.go         # hex/bin conversions
+│   ├── cases.go           # case transformations
+│   └── article.go         # a/an correction
+├── formatters/            # Formatting logic (pure functions)
+│   ├── punctuation.go
+│   └── quotes.go
+└── tests/                 # Unit & integration tests
+    └── *_test.go
 ```
 
 ---
 
 ## Documentation
 
-- **README.md** (this file): Project overview and usage guide
-- **ANALYSIS.md**: Detailed architecture analysis, design decisions, and comprehensive test suite
+### 📘 **README.md** (this file)
+Quick overview and usage guide.
+
+### 📗 **docs/ANALYSIS.md**
+Comprehensive documentation including:
+- Problem description
+- Architecture comparison (Pipeline vs FSM)
+- Design decisions and justification
+- Complete test suite (Golden Test Set)
+- Implementation guidelines
+
+---
+
+## Testing
+
+```bash
+# Run all tests
+go test ./...
+
+# Run with coverage
+go test -cover ./...
+
+# Run specific test suite
+go test ./tests/transforms_test.go
+```
+
+For detailed test cases, see `docs/ANALYSIS.md`.
+
+---
+
+## Architecture Highlight
+
+This project uses **FSM (Finite State Machine)** architecture for:
+- ✅ Single-pass processing (O(n) efficiency)
+- ✅ Context-aware transformations
+- ✅ Memory efficiency
+- ✅ Industry-standard approach for text parsing
+
+For detailed architecture analysis, see `docs/ANALYSIS.md`.
 
 ---
 
 ## Author
 
-Text Editor Project - FSM Architecture Implementation
+Text Editor Project - FSM Implementation
 
 ---
 

@@ -27,7 +27,146 @@ The challenge is to accomplish this efficiently, with proper context management,
 
 ---
 
-## <span style="color: #CCFF99;">2. Architecture Comparison</span>
+# Text Editor Project - Analysis Document
+
+## Table of Contents
+1. [Problem Description](#1-problem-description)
+2. [Transformation Rules Reference](#2-transformation-rules-reference)
+3. [Architecture Comparison](#3-architecture-comparison)
+4. [Golden Test Set](#4-golden-test-set)
+
+---
+
+## <span style="color: #CCFF99;">1. Problem Description</span>
+
+The problem involves creating a text processing tool that reads an input file, applies a series of transformations and formatting rules, and writes the result to an output file.
+
+The program must recognize special modifiers within the text (e.g., `(hex)`, `(up)`, `(cap)`) and apply the corresponding transformations to previous words. Additionally, it must automatically correct punctuation, spacing around punctuation marks, and handle special cases such as quotes and article correction (a/an).
+
+The challenge is to accomplish this efficiently, with proper context management, in a way that is easily extensible and maintainable.
+
+---
+
+<div align="center">
+
+### FSM Architecture Diagram
+
+<img src="../assets/fsm flow diagram.png" alt="FSM Flow Diagram" width="800"/>
+
+</div>
+
+---
+
+## <span style="color: #CCFF99;">2. Transformation Rules Reference</span>
+
+### 2.1 Number Base Conversions
+
+#### `(hex)` - Hexadecimal to Decimal
+Converts the previous word from hexadecimal to decimal.
+
+**Examples:**
+- `"1E (hex) files"` → `"30 files"`
+- `"FF (hex) is max"` → `"255 is max"`
+
+#### `(bin)` - Binary to Decimal
+Converts the previous word from binary to decimal.
+
+**Examples:**
+- `"10 (bin) years"` → `"2 years"`
+- `"1010 (bin) equals"` → `"10 equals"`
+
+---
+
+### 2.2 Case Transformations
+
+#### `(up)` - Uppercase
+Converts the previous word to UPPERCASE.
+
+**Example:**
+- `"go (up) now"` → `"GO now"`
+
+#### `(low)` - Lowercase
+Converts the previous word to lowercase.
+
+**Example:**
+- `"SHOUTING (low)"` → `"shouting"`
+
+#### `(cap)` - Capitalize
+Capitalizes only the first letter of the previous word.
+
+**Example:**
+- `"bridge (cap)"` → `"Bridge"`
+
+---
+
+### 2.3 Batch Transformations
+
+#### `(up, N)` - Uppercase N Words
+Converts the N previous words to UPPERCASE.
+
+**Example:**
+- `"so exciting (up, 2)"` → `"SO EXCITING"`
+
+#### `(low, N)` - Lowercase N Words
+Converts the N previous words to lowercase.
+
+**Example:**
+- `"IT WAS THE (low, 3)"` → `"it was the"`
+
+#### `(cap, N)` - Capitalize N Words
+Capitalizes the N previous words.
+
+**Example:**
+- `"age of foolishness (cap, 3)"` → `"Age Of Foolishness"`
+
+---
+
+### 2.4 Punctuation Rules
+
+#### Basic Punctuation: `. , ! ? : ;`
+Sticks to the previous word (no space before), space after.
+
+**Examples:**
+- `"there ,and then"` → `"there, and then"`
+- `"Hello !"` → `"Hello!"`
+
+#### Punctuation Groups: `...` `!?` etc.
+Groups of punctuation marks stay together without internal spaces.
+
+**Examples:**
+- `"thinking . . ."` → `"thinking..."`
+- `"Really ! ?"` → `"Really!?"`
+
+---
+
+### 2.5 Quote Handling: `'`
+
+#### Single Word
+Quotes stick to the left and right of the word.
+
+**Example:**
+- `"I am: ' awesome '"` → `"I am: 'awesome'"`
+
+#### Multiple Words
+Quotes stick to the first and last word.
+
+**Example:**
+- `"' I am the best '"` → `"'I am the best'"`
+
+---
+
+### 2.6 Article Correction: a → an
+
+The article "a" becomes "an" if the next word starts with a vowel (a, e, i, o, u) or 'h'.
+
+**Examples:**
+- `"a amazing"` → `"an amazing"`
+- `"a honest"` → `"an honest"`
+- `"a book"` → `"a book"` (no change)
+
+---
+
+## <span style="color: #CCFF99;">3. Architecture Comparison</span>
 
 This section analyzes two possible architectural approaches for implementing the text editor: **Pipeline Architecture** and **FSM (Finite State Machine) Architecture**.
 
@@ -131,6 +270,51 @@ Alternative paths:
 
 ---
 
+### FSM State Transition Logic
+
+**State Flow:**
+```
+START → READING_WORD → WORD_COMPLETE → CHECK_MODIFIER
+                                      ↓
+                              [Modifier Found]
+                                      ↓
+                              APPLY_TRANSFORMATION → OUTPUT
+                                                        ↓
+                                                   BACK_TO_READ
+
+Alternative paths:
+- PUNCTUATION → FORMAT_PUNCT → OUTPUT → BACK_TO_READ
+- QUOTE_START → IN_QUOTES → QUOTE_END → OUTPUT → BACK_TO_READ
+- SPACE → CHECK_CONTEXT → OUTPUT → BACK_TO_READ
+```
+
+**Context Management:**
+- **Word Buffer**: Maintains last N words for batch transformations
+- **Quote State**: Boolean flag tracking if inside quotes
+- **Previous Token**: Remembers last processed token for punctuation rules
+- **Modifier Stack**: Stores pending modifiers to apply
+
+---
+
+### Why Separation of Concerns?
+
+The project structure separates **orchestration** (FSM) from **business logic** (transforms/formatters):
+
+```
+fsm/          → Controls state transitions and flow
+   ↓ uses
+transforms/   → Pure functions: hex/bin conversions, case changes
+formatters/   → Pure functions: punctuation, quote formatting
+```
+
+**Benefits:**
+1. **Reusability**: Transforms can be used independently of FSM
+2. **Testability**: Unit test pure functions without FSM overhead
+3. **Maintainability**: Changes to logic don't affect state machine
+4. **Extensibility**: Easy to add Pipeline architecture using same transforms
+
+---
+
 ### Implementation Considerations
 
 **Data Structures:**
@@ -153,7 +337,7 @@ Alternative paths:
 
 ---
 
-## <span style="color: #CCFF99;">3. Golden Test Set</span>
+## <span style="color: #CCFF99;">4. Golden Test Set</span>
 
 This section contains comprehensive test cases to validate the text editor implementation.
 
