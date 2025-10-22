@@ -1,10 +1,10 @@
 <span style="color: #FF0000;"># Analysis/Developer Focused Document - GO-reloaded Project</span>
 
 ## Table of Contents
-1. [Architecture Comparison](architecture-comparison)
+1. [Architecture Comparison](#architecture-comparison)
 2. [Why FSM](#why-fsm)
-3. [Transformation Rules Reference](transformation-rules-reference)
-4. [Golden Test Set](#4-golden-test-set)
+3. [Transformation Rules Reference](#transformation-rules-reference)
+4. [Golden Test Set](#golden-test-set)
 
 ---
 
@@ -13,7 +13,7 @@
 
 This section analyzes two possible architectural approaches for implementing the text editor: **Pipeline Architecture** and **FSM (Finite State Machine) Architecture**.
 
-### Pipeline Architecture
+<span style="color: #FFD700;">### Pipeline Architecture</span>
 
 **How it works:**
 The text passes through a series of independent filters/stages:
@@ -40,7 +40,7 @@ The text passes through a series of independent filters/stages:
 
 ---
 
-### FSM (Finite State Machine) Architecture ⭐
+<span style="color: #FFD700;">### FSM (Finite State Machine) Architecture</span>
 
 **How it works:**
 The program is always in a specific "state" and reads the input character-by-character or token-by-token. Depending on the current state and the next input, it changes state and executes actions.
@@ -53,14 +53,14 @@ The program is always in a specific "state" and reads the input character-by-cha
 - `HANDLE_PUNCTUATION`: Applying punctuation rules
 
 **Advantages:**
-- ✅ **Single pass** - reads the text only once
-- ✅ **Memory efficient** - doesn't create intermediate copies
-- ✅ **Context awareness** - the state machine "remembers" where it is (inside quotes, after modifier, etc.)
-- ✅ **Natural fit** - text parsing is a classic FSM problem
-- ✅ **Faster execution** - O(n) complexity with minimal overhead
-- ✅ **Easier debugging** - you know exactly which state you're in
-- ✅ **Scalability** - handles large files efficiently
-- ✅ **Industry standard** - compilers, parsers, and lexers all use FSM
+-  **Single pass** - reads the text only once
+-  **Memory efficient** - doesn't create intermediate copies
+-  **Context awareness** - the state machine "remembers" where it is (inside quotes, after modifier, etc.)
+-  **Natural fit** - text parsing is a classic FSM problem
+-  **Faster execution** - O(n) complexity with minimal overhead
+-  **Easier debugging** - you know exactly which state you're in
+-  **Scalability** - handles large files efficiently
+-  **Industry standard** - compilers, parsers, and lexers all use FSM
 
 **Disadvantages:**
 - More complex initial design
@@ -77,10 +77,12 @@ The program is always in a specific "state" and reads the input character-by-cha
 
 </div>
 
+
 ---
 
+
 <a name="why-fsm"></a>
-### <span style="color: #FF0000;">3.**Why FSM:**</span>
+### <span style="color: #FF0000;">3.**Why FSM? My personal choice:**</span>
 
 1. **Performance**: For text processing, single-pass FSM is objectively faster
 2. **Memory**: For large files, the memory difference is significant
@@ -95,7 +97,7 @@ The **tradeoff** of complexity is worth it for the benefits that FSM offers in t
 
 ---
 
-### FSM State Transition Logic
+<span style="color: #FFD700;">### FSM State Transition Logic</span>
 
 **State Flow:**
 ```
@@ -121,7 +123,7 @@ Alternative paths:
 
 ---
 
-### FSM State Transition Logic
+<span style="color: #FFD700;">### FSM State Transition Logic</span>
 
 **State Flow:**
 ```
@@ -147,7 +149,7 @@ Alternative paths:
 
 ---
 
-### Why Separation of Concerns?
+<span style="color: #FFD700;">### Why Separation of Concerns?</span>
 
 The project structure separates **orchestration** (FSM) from **business logic** (transforms/formatters):
 
@@ -166,7 +168,7 @@ formatters/   → Pure functions: punctuation, quote formatting
 
 ---
 
-### Implementation Considerations
+<span style="color: #FFD700;">### Implementation Considerations</span>
 
 **Data Structures:**
 - **Circular buffer** for word history (for `(up, N)` modifiers)
@@ -298,6 +300,7 @@ The article "a" becomes "an" if the next word starts with a vowel (a, e, i, o, u
 
 ---
 
+<a name="golden-test-set"></a>
 ## <span style="color: #CCFF99;">4. Golden Test Set</span>
 
 This section contains comprehensive test cases to validate the text editor implementation.
@@ -521,7 +524,7 @@ It was an amazing day! the sun was shining and the temperature reached 31 degree
 
 ---
 
-## Edge Cases to Consider
+<span style="color: #ff0000ff;">## Edge Cases to Consider</span>
 
 ### Additional Test Scenarios
 
@@ -601,3 +604,13 @@ This analysis document provides:
 4. Implementation guidelines
 
 The FSM architecture is the optimal choice for this text processing task due to its efficiency, natural fit for parsing problems, and industry-standard approach.
+
+## Author
+
+Constantine E.P.
+
+---
+
+## License
+
+Educational project for learning purposes.
