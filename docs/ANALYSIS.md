@@ -1,172 +1,15 @@
-# Text Editor Project - Analysis Document
+<span style="color: #FF0000;"># Analysis/Developer Focused Document - GO-reloaded Project</span>
 
 ## Table of Contents
-1. [Problem Description](#1-problem-description)
-2. [Architecture Comparison](#2-architecture-comparison)
-3. [Golden Test Set](#3-golden-test-set)
-
----
-
-## <span style="color: #CCFF99;">1. Problem Description</span>
-
-The problem involves creating a text processing tool that reads an input file, applies a series of transformations and formatting rules, and writes the result to an output file.
-
-The program must recognize special modifiers within the text (e.g., `(hex)`, `(up)`, `(cap)`) and apply the corresponding transformations to previous words. Additionally, it must automatically correct punctuation, spacing around punctuation marks, and handle special cases such as quotes and article correction (a/an).
-
-The challenge is to accomplish this efficiently, with proper context management, in a way that is easily extensible and maintainable.
-
----
-
-<div align="center">
-
-### FSM Architecture Diagram
-
-<img src="assets/fsm flow diagram.png" alt="FSM Flow Diagram" width="800"/>
-
-</div>
-
----
-
-# Text Editor Project - Analysis Document
-
-## Table of Contents
-1. [Problem Description](#1-problem-description)
-2. [Transformation Rules Reference](#2-transformation-rules-reference)
-3. [Architecture Comparison](#3-architecture-comparison)
+1. [Architecture Comparison](architecture-comparison)
+2. [Why FSM](#why-fsm)
+3. [Transformation Rules Reference](transformation-rules-reference)
 4. [Golden Test Set](#4-golden-test-set)
 
 ---
 
-## <span style="color: #CCFF99;">1. Problem Description</span>
-
-The problem involves creating a text processing tool that reads an input file, applies a series of transformations and formatting rules, and writes the result to an output file.
-
-The program must recognize special modifiers within the text (e.g., `(hex)`, `(up)`, `(cap)`) and apply the corresponding transformations to previous words. Additionally, it must automatically correct punctuation, spacing around punctuation marks, and handle special cases such as quotes and article correction (a/an).
-
-The challenge is to accomplish this efficiently, with proper context management, in a way that is easily extensible and maintainable.
-
----
-
-<div align="center">
-
-### FSM Architecture Diagram
-
-<img src="../assets/fsm flow diagram.png" alt="FSM Flow Diagram" width="800"/>
-
-</div>
-
----
-
-## <span style="color: #CCFF99;">2. Transformation Rules Reference</span>
-
-### 2.1 Number Base Conversions
-
-#### `(hex)` - Hexadecimal to Decimal
-Converts the previous word from hexadecimal to decimal.
-
-**Examples:**
-- `"1E (hex) files"` → `"30 files"`
-- `"FF (hex) is max"` → `"255 is max"`
-
-#### `(bin)` - Binary to Decimal
-Converts the previous word from binary to decimal.
-
-**Examples:**
-- `"10 (bin) years"` → `"2 years"`
-- `"1010 (bin) equals"` → `"10 equals"`
-
----
-
-### 2.2 Case Transformations
-
-#### `(up)` - Uppercase
-Converts the previous word to UPPERCASE.
-
-**Example:**
-- `"go (up) now"` → `"GO now"`
-
-#### `(low)` - Lowercase
-Converts the previous word to lowercase.
-
-**Example:**
-- `"SHOUTING (low)"` → `"shouting"`
-
-#### `(cap)` - Capitalize
-Capitalizes only the first letter of the previous word.
-
-**Example:**
-- `"bridge (cap)"` → `"Bridge"`
-
----
-
-### 2.3 Batch Transformations
-
-#### `(up, N)` - Uppercase N Words
-Converts the N previous words to UPPERCASE.
-
-**Example:**
-- `"so exciting (up, 2)"` → `"SO EXCITING"`
-
-#### `(low, N)` - Lowercase N Words
-Converts the N previous words to lowercase.
-
-**Example:**
-- `"IT WAS THE (low, 3)"` → `"it was the"`
-
-#### `(cap, N)` - Capitalize N Words
-Capitalizes the N previous words.
-
-**Example:**
-- `"age of foolishness (cap, 3)"` → `"Age Of Foolishness"`
-
----
-
-### 2.4 Punctuation Rules
-
-#### Basic Punctuation: `. , ! ? : ;`
-Sticks to the previous word (no space before), space after.
-
-**Examples:**
-- `"there ,and then"` → `"there, and then"`
-- `"Hello !"` → `"Hello!"`
-
-#### Punctuation Groups: `...` `!?` etc.
-Groups of punctuation marks stay together without internal spaces.
-
-**Examples:**
-- `"thinking . . ."` → `"thinking..."`
-- `"Really ! ?"` → `"Really!?"`
-
----
-
-### 2.5 Quote Handling: `'`
-
-#### Single Word
-Quotes stick to the left and right of the word.
-
-**Example:**
-- `"I am: ' awesome '"` → `"I am: 'awesome'"`
-
-#### Multiple Words
-Quotes stick to the first and last word.
-
-**Example:**
-- `"' I am the best '"` → `"'I am the best'"`
-
----
-
-### 2.6 Article Correction: a → an
-
-The article "a" becomes "an" if the next word starts with a vowel (a, e, i, o, u) or 'h'.
-
-**Examples:**
-- `"a amazing"` → `"an amazing"`
-- `"a honest"` → `"an honest"`
-- `"a book"` → `"a book"` (no change)
-
----
-
-## <span style="color: #CCFF99;">3. Architecture Comparison</span>
+<a name="architecture-comparison"></a>
+## <span style="color: #CCFF99;">1. Architecture Comparison</span>
 
 This section analyzes two possible architectural approaches for implementing the text editor: **Pipeline Architecture** and **FSM (Finite State Machine) Architecture**.
 
@@ -225,11 +68,19 @@ The program is always in a specific "state" and reads the input character-by-cha
 - Harder to modify after initial implementation
 - Steeper learning curve for beginners
 
+
+<div align="center">
+
+### FSM Architecture Diagram
+
+<img src="../assets/fsm flow diagram.png" alt="FSM Flow Diagram" width="800"/>
+
+</div>
+
 ---
 
-### <span style="color: #FF0000;">Personal Choice: FSM Architecture ✅</span>
-
-**Why FSM:**
+<a name="why-fsm"></a>
+### <span style="color: #FF0000;">3.**Why FSM:**</span>
 
 1. **Performance**: For text processing, single-pass FSM is objectively faster
 2. **Memory**: For large files, the memory difference is significant
@@ -334,6 +185,116 @@ formatters/   → Pure functions: punctuation, quote formatting
 - Malformed input (unclosed quotes)
 - Out-of-range batch numbers (e.g., `(up, 100)` when only 3 words exist)
 - File I/O errors
+
+---
+
+<a name="transformation-rules-reference"></a>
+## <span style="color: #CCFF99;">3. Transformation Rules Reference</span>
+
+### 3.1 Number Base Conversions
+
+#### `(hex)` - Hexadecimal to Decimal
+Converts the previous word from hexadecimal to decimal.
+
+**Examples:**
+- `"1E (hex) files"` → `"30 files"`
+- `"FF (hex) is max"` → `"255 is max"`
+
+#### `(bin)` - Binary to Decimal
+Converts the previous word from binary to decimal.
+
+**Examples:**
+- `"10 (bin) years"` → `"2 years"`
+- `"1010 (bin) equals"` → `"10 equals"`
+
+---
+
+### 3.2 Case Transformations
+
+#### `(up)` - Uppercase
+Converts the previous word to UPPERCASE.
+
+**Example:**
+- `"go (up) now"` → `"GO now"`
+
+#### `(low)` - Lowercase
+Converts the previous word to lowercase.
+
+**Example:**
+- `"SHOUTING (low)"` → `"shouting"`
+
+#### `(cap)` - Capitalize
+Capitalizes only the first letter of the previous word.
+
+**Example:**
+- `"bridge (cap)"` → `"Bridge"`
+
+---
+
+### 3.3 Batch Transformations
+
+#### `(up, N)` - Uppercase N Words
+Converts the N previous words to UPPERCASE.
+
+**Example:**
+- `"so exciting (up, 2)"` → `"SO EXCITING"`
+
+#### `(low, N)` - Lowercase N Words
+Converts the N previous words to lowercase.
+
+**Example:**
+- `"IT WAS THE (low, 3)"` → `"it was the"`
+
+#### `(cap, N)` - Capitalize N Words
+Capitalizes the N previous words.
+
+**Example:**
+- `"age of foolishness (cap, 3)"` → `"Age Of Foolishness"`
+
+---
+
+### 3.4 Punctuation Rules
+
+#### Basic Punctuation: `. , ! ? : ;`
+Sticks to the previous word (no space before), space after.
+
+**Examples:**
+- `"there ,and then"` → `"there, and then"`
+- `"Hello !"` → `"Hello!"`
+
+#### Punctuation Groups: `...` `!?` etc.
+Groups of punctuation marks stay together without internal spaces.
+
+**Examples:**
+- `"thinking . . ."` → `"thinking..."`
+- `"Really ! ?"` → `"Really!?"`
+
+---
+
+### 3.5 Quote Handling: `'`
+
+#### Single Word
+Quotes stick to the left and right of the word.
+
+**Example:**
+- `"I am: ' awesome '"` → `"I am: 'awesome'"`
+
+#### Multiple Words
+Quotes stick to the first and last word.
+
+**Example:**
+- `"' I am the best '"` → `"'I am the best'"`
+
+---
+
+### 3.6 Article Correction: a → an
+
+The article "a" becomes "an" if the next word starts with a vowel (a, e, i, o, u) or 'h'.
+
+**Examples:**
+- `"a amazing"` → `"an amazing"`
+- `"a honest"` → `"an honest"`
+- `"a book"` → `"a book"` (no change)
 
 ---
 

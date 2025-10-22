@@ -1,8 +1,9 @@
-# Text Editor Project
+<span style="color: #FF0000;"># Auditor/Educational focused Document - GO-reloaded Project</span>
 
-## Overview
+<span style="color: #CCFF99;">## Overview</span>
 
-A text processing tool that reads an input file, applies transformations and formatting rules, and writes the result to an output file using **FSM (Finite State Machine) architecture**.
+This project implements a text processing tool that reads an input file, applies transformations and formatting rules, and writes the result to an output file using **FSM (Finite State Machine) architecture**.
+The program recognizes special modifiers within the text and applies the corresponding transformations to previous words. Additionally, it automatically corrects punctuation, spacing around punctuation marks, and handles special cases such as quotes and article correction (a/an).
 
 ---
 
@@ -104,10 +105,10 @@ For detailed test cases, see `docs/ANALYSIS.md`.
 ## Architecture Highlight
 
 This project uses **FSM (Finite State Machine)** architecture for:
-- ✅ Single-pass processing (O(n) efficiency)
-- ✅ Context-aware transformations
-- ✅ Memory efficiency
-- ✅ Industry-standard approach for text parsing
+-  Single-pass processing (O(n) efficiency)
+-  Context-aware transformations
+-  Memory efficiency
+-  Industry-standard approach for text parsing
 
 For detailed architecture analysis, see `docs/ANALYSIS.md`.
 
@@ -115,7 +116,7 @@ For detailed architecture analysis, see `docs/ANALYSIS.md`.
 
 ## Author
 
-Text Editor Project - FSM Implementation
+Constantine E.P.
 
 ---
 
