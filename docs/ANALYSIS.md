@@ -31,7 +31,7 @@ The text passes through a series of independent filters/stages:
 - Straightforward debugging per stage
 
 **Disadvantages:**
-- Requires multiple passes through the text (5+ times)
+- Requires multiple passes through the text (2+ times)
 - Each stage creates an intermediate string
 - High memory usage for large files
 - Difficult to maintain context between stages
