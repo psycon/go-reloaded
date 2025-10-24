@@ -82,7 +82,7 @@ The program is always in a specific "state" and reads the input character-by-cha
 
 
 <a name="why-fsm"></a>
-### <span style="color: #FF0000;">2.**Why FSM? My personal choice:**</span>
+### <span style="color: #CCFF99;">2. **Why FSM? My personal choice:**</span>
 
 1. **Performance**: For text processing, single-pass FSM is objectively faster
 2. **Memory**: For large files, the memory difference is significant
