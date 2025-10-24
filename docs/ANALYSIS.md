@@ -82,7 +82,7 @@ The program is always in a specific "state" and reads the input character-by-cha
 
 
 <a name="why-fsm"></a>
-### <span style="color: #FF0000;">3.**Why FSM? My personal choice:**</span>
+### <span style="color: #FF0000;">2.**Why FSM? My personal choice:**</span>
 
 1. **Performance**: For text processing, single-pass FSM is objectively faster
 2. **Memory**: For large files, the memory difference is significant
@@ -96,34 +96,6 @@ The program is always in a specific "state" and reads the input character-by-cha
 The **tradeoff** of complexity is worth it for the benefits that FSM offers in this project.
 
 ---
-
-<span style="color: #FFD700;">### FSM State Transition Logic</span>
-
-**State Flow:**
-```
-START → READING_WORD → WORD_COMPLETE → CHECK_MODIFIER
-                                      ↓
-                              [Modifier Found]
-                                      ↓
-                              APPLY_TRANSFORMATION → OUTPUT
-                                                        ↓
-                                                   BACK_TO_READ
-
-Alternative paths:
-- PUNCTUATION → FORMAT_PUNCT → OUTPUT → BACK_TO_READ
-- QUOTE_START → IN_QUOTES → QUOTE_END → OUTPUT → BACK_TO_READ
-- SPACE → CHECK_CONTEXT → OUTPUT → BACK_TO_READ
-```
-
-**Context Management:**
-- **Word Buffer**: Maintains last N words for batch transformations
-- **Quote State**: Boolean flag tracking if inside quotes
-- **Previous Token**: Remembers last processed token for punctuation rules
-- **Modifier Stack**: Stores pending modifiers to apply
-
----
-
-<span style="color: #FFD700;">### FSM State Transition Logic</span>
 
 **State Flow:**
 ```
