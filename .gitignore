@@ -1,0 +1,38 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+go-reloaded
+
+# Test binary
+*.test
+
+# Output coverage
+*.out
+
+# Go workspace file
+go.work
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Output files
+result.txt
+output.txt
+*.txt
+!sample.txt
+!test*.txt
+
+# Temporary files
+temp/
+tmp/
