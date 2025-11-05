@@ -10,6 +10,7 @@
 
 <a name="architecture-comparison"></a>
 ## <span style="color: #CCFF99;">1. Architecture Comparison</span>
+## 1. Architecture Comparison
 
 This section analyzes two possible architectural approaches for implementing the text editor: **Pipeline Architecture** and **FSM (Finite State Machine) Architecture**.
 
@@ -83,6 +84,7 @@ The program is always in a specific "state" and reads the input character-by-cha
 
 <a name="why-fsm"></a>
 ### <span style="color: #CCFF99;">2. **Why FSM? My personal choice:**</span>
+## 2. Why FSM
 
 1. **Performance**: For text processing, single-pass FSM is objectively faster
 2. **Memory**: For large files, the memory difference is significant
@@ -164,6 +166,7 @@ formatters/   → Pure functions: punctuation, quote formatting
 
 <a name="transformation-rules-reference"></a>
 ## <span style="color: #CCFF99;">3. Transformation Rules Reference</span>
+## 3. Transformation Rules Reference
 
 ### 3.1 Number Base Conversions
 
@@ -274,6 +277,7 @@ The article "a" becomes "an" if the next word starts with a vowel (a, e, i, o, u
 
 <a name="golden-test-set"></a>
 ## <span style="color: #CCFF99;">4. Golden Test Set</span>
+## 4. Golden Test Set
 
 This section contains comprehensive test cases to validate the text editor implementation.
 

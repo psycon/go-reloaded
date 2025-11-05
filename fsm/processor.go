@@ -87,10 +87,17 @@ func (p *Processor) Process(input string) string {
 }
 
 func (p *Processor) handleModifier(modifier string) {
-	if len(p.wordBuffer) == 0 {
+	targetBuffer := &p.wordBuffer
+	if p.inQuote {
+		targetBuffer = &p.quoteWords
+	}
+
+	if len(*targetBuffer) == 0 {
 		// No preceding word, treat modifier as regular text
 		if p.inQuote {
 			p.quoteWords = append(p.quoteWords, modifier)
+		} else if len(p.wordBuffer) == 0 {
+			p.wordBuffer = append(p.wordBuffer, modifier)
 		} else {
 			p.wordBuffer = append(p.wordBuffer, modifier)
 		}
@@ -101,32 +108,32 @@ func (p *Processor) handleModifier(modifier string) {
 
 	switch modType {
 	case "hex":
-		idx := len(p.wordBuffer) - 1
-		p.wordBuffer[idx] = transforms.HexToDec(p.wordBuffer[idx])
+		idx := len(*targetBuffer) - 1
+		(*targetBuffer)[idx] = transforms.HexToDec((*targetBuffer)[idx])
 	case "bin":
-		idx := len(p.wordBuffer) - 1
-		p.wordBuffer[idx] = transforms.BinToDec(p.wordBuffer[idx])
+		idx := len(*targetBuffer) - 1
+		(*targetBuffer)[idx] = transforms.BinToDec((*targetBuffer)[idx])
 	case "up":
-		p.applyCase(transforms.ToUpper, count)
+		p.applyCase(transforms.ToUpper, count, targetBuffer)
 	case "low":
-		p.applyCase(transforms.ToLower, count)
+		p.applyCase(transforms.ToLower, count, targetBuffer)
 	case "cap":
-		p.applyCase(transforms.Capitalize, count)
+		p.applyCase(transforms.Capitalize, count, targetBuffer)
 	}
 }
 
-func (p *Processor) applyCase(fn func(string) string, count int) {
+func (p *Processor) applyCase(fn func(string) string, count int, buffer *[]string) {
 	if count == 0 {
 		count = 1
 	}
 
-	start := len(p.wordBuffer) - count
+	start := len(*buffer) - count
 	if start < 0 {
 		start = 0
 	}
 
-	for i := start; i < len(p.wordBuffer); i++ {
-		p.wordBuffer[i] = fn(p.wordBuffer[i])
+	for i := start; i < len(*buffer); i++ {
+		(*buffer)[i] = fn((*buffer)[i])
 	}
 }
 
@@ -159,6 +166,15 @@ func (p *Processor) handleQuote() {
 		p.quoteWords = make([]string, 0)
 	} else {
 		// Closing quote
+		// APPLY ARTICLE CORRECTION TO QUOTED WORDS
+		for i := 0; i < len(p.quoteWords); i++ {
+			var nextWord string
+			if i < len(p.quoteWords)-1 {
+				nextWord = p.quoteWords[i+1]
+			}
+			p.quoteWords[i] = transforms.FixArticle(p.quoteWords[i], nextWord)
+		}
+
 		quoted := formatters.FormatQuote(p.quoteWords)
 
 		if p.output.Len() > 0 && !endsWithSpace(p.output.String()) {
@@ -283,10 +299,12 @@ func parseModifier(token string) (string, int) {
 	parts := strings.Split(content, ",")
 
 	modType := strings.TrimSpace(parts[0])
-	count := 0
+	count := 1 // Default to 1 if no count is specified
 
 	if len(parts) > 1 {
 		fmt.Sscanf(strings.TrimSpace(parts[1]), "%d", &count)
+	} else if modType == "hex" || modType == "bin" {
+		count = 1 // These never have a count, ensure it's 1
 	}
 
 	return modType, count
