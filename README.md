@@ -46,26 +46,51 @@ It was the best of times, it was the worst of TIMES
 ## Project Structure
 
 ```
-.
-├── README.md              # Project overview (this file)
-├── docs/
-│   └── ANALYSIS.md        # Architecture analysis & test cases
-├── assets/
-│   └── fsm flow diagram.png
-├── main.go                # Entry point
-├── fsm/                   # FSM state machine (orchestration)
-│   ├── fsm.go
-│   ├── states.go
-│   └── transitions.go
-├── transforms/            # Transformation logic (pure functions)
-│   ├── numbers.go         # hex/bin conversions
-│   ├── cases.go           # case transformations
-│   └── article.go         # a/an correction
-├── formatters/            # Formatting logic (pure functions)
-│   ├── punctuation.go
-│   └── quotes.go
-└── tests/                 # Unit & integration tests
-    └── *_test.go
+/Users/con/zone01/go-reloaded/
+├───.gitignore
+├───AGENTS.md
+├───AUTHORS.md
+├───go.mod
+├───main.go
+├───README.md
+├───test.txt
+├───assets/
+│   ├───.gitkeep
+│   └───fsm flow diagram.png
+├───docs/
+│   └───ANALYSIS.md
+├───formatters/
+│   ├───.gitkeep
+│   ├───punctuation.go
+│   └───quotes.go
+├───fsm/
+│   ├───.gitkeep
+│   └───processor.go
+├───tasks/
+│   ├───.gitkeep
+│   ├───TASK-01.md
+│   ├───TASK-02.md
+│   ├───TASK-03.md
+│   ├───TASK-04.md
+│   ├───TASK-05.md
+│   ├───TASK-06.md
+│   ├───TASK-07.md
+│   ├───TASK-08.md
+│   └───TASK-09-10.md
+├───tests/
+│   ├───.gitkeep
+│   ├───documentation_test.go
+│   ├───fsm_test.go
+│   ├───formatters_test.go
+│   ├───golden_test.go
+│   ├───integration_test.go
+│   ├───main_test.go
+│   └───transforms_test.go
+└───transforms/
+    ├───.gitkeep
+    ├───article.go
+    ├───cases.go
+    └───numbers.go
 ```
 
 ---

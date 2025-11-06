@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go-reloaded/formatters"
 	"go-reloaded/transforms"
+	"regexp"
 	"strings"
 )
 
@@ -19,7 +20,8 @@ type Processor struct {
 	//flags T if ' found
 	inQuote bool
 	//temp buffer for quoted words
-	quoteWords []string
+	quoteWords           []string
+	lastProcessedWasWord bool // Tracks if the last token processed was a word (not punctuation, modifier, or quote)
 }
 
 func NewProcessor() *Processor {
@@ -37,6 +39,7 @@ func (p *Processor) Process(input string) string {
 	p.wordBuffer = make([]string, 0)
 	p.inQuote = false
 	p.quoteWords = make([]string, 0)
+	p.lastProcessedWasWord = false // Reset state for new input
 
 	// Now tokenize and process
 	p.tokens = tokenize(input)
@@ -52,8 +55,10 @@ func (p *Processor) Process(input string) string {
 
 		// Handle quotes
 		if token == "'" {
+			p.flushBuffer() // Flush any pending words before handling quote
 			p.handleQuote()
 			p.pos++
+			p.lastProcessedWasWord = false // A quote was just processed
 			continue
 		}
 
@@ -61,9 +66,9 @@ func (p *Processor) Process(input string) string {
 		if isModifier(token) {
 			p.handleModifier(token)
 			p.pos++
+			p.lastProcessedWasWord = false // A modifier was just processed
 			continue
 		}
-
 		// Check for punctuation
 		if isPunctuation(token) {
 			p.handlePunctuation()
@@ -74,8 +79,9 @@ func (p *Processor) Process(input string) string {
 		if p.inQuote {
 			p.quoteWords = append(p.quoteWords, token)
 		} else {
-			p.wordBuffer = append(p.wordBuffer, token)
+			p.wordBuffer = append(p.wordBuffer, token) // Add to buffer
 		}
+		p.lastProcessedWasWord = true // A word was just processed
 
 		p.pos++
 	}
@@ -92,16 +98,12 @@ func (p *Processor) handleModifier(modifier string) {
 		targetBuffer = &p.quoteWords
 	}
 
-	if len(*targetBuffer) == 0 {
-		// No preceding word, treat modifier as regular text
-		if p.inQuote {
-			p.quoteWords = append(p.quoteWords, modifier)
-		} else if len(p.wordBuffer) == 0 {
-			p.wordBuffer = append(p.wordBuffer, modifier)
-		} else {
-			p.wordBuffer = append(p.wordBuffer, modifier)
-		}
-		return
+	// If the last processed token was NOT a word, this modifier should be treated as text.
+	// This handles cases like "(cap) hello" or "word (up) (low)" where (low) should be text.
+	if !p.lastProcessedWasWord {
+		// Add the modifier as a literal word to the appropriate buffer
+		*targetBuffer = append(*targetBuffer, modifier)
+		return // And do not process it as a modifier
 	}
 
 	modType, count := parseModifier(modifier)
@@ -120,6 +122,7 @@ func (p *Processor) handleModifier(modifier string) {
 	case "cap":
 		p.applyCase(transforms.Capitalize, count, targetBuffer)
 	}
+	p.lastProcessedWasWord = false // A modifier was just processed
 }
 
 func (p *Processor) applyCase(fn func(string) string, count int, buffer *[]string) {
@@ -145,44 +148,58 @@ func (p *Processor) handlePunctuation() {
 		p.pos++
 	}
 
+	if p.inQuote {
+		// If inside a quote, attach punctuation to the last word.
+		if len(p.quoteWords) > 0 {
+			lastIndex := len(p.quoteWords) - 1
+			p.quoteWords[lastIndex] += group
+		} else {
+			p.quoteWords = append(p.quoteWords, group)
+		}
+		return
+	}
+
 	// Flush words before punctuation
 	p.flushBuffer()
 
-	// Add punctuation (sticks to previous word, space after)
-	p.output.WriteString(formatters.FormatPunctuation(group))
-}
+	// Trim trailing space from output before adding punctuation
+	if p.output.Len() > 0 && p.output.String()[p.output.Len()-1] == ' ' {
+		currentOutput := p.output.String()
+		p.output.Reset()
+		p.output.WriteString(currentOutput[:len(currentOutput)-1])
+	}
 
+	// Add punctuation (sticks to previous word, space after)
+	p.lastProcessedWasWord = false // Punctuation was just processed
+	p.output.WriteString(formatters.FormatPunctuation(group))
+	p.output.WriteString(" ") // Add space after punctuation
+}
 func (p *Processor) handleQuote() {
 	if !p.inQuote {
-		// If there are words in the buffer before an opening quote,
-		// and the last word is punctuation, it's a syntax error in input.
-		// But we can handle it gracefully by flushing.
-		if len(p.wordBuffer) > 0 && isPunctuation(p.wordBuffer[len(p.wordBuffer)-1]) {
-			p.flushBuffer()
-		}
-		// Opening quote
 		p.flushBuffer()
 		p.inQuote = true
+		p.lastProcessedWasWord = false // Entering a quote, not a word
 		p.quoteWords = make([]string, 0)
 	} else {
-		// Closing quote
-		// APPLY ARTICLE CORRECTION TO QUOTED WORDS
-		for i := 0; i < len(p.quoteWords); i++ {
-			var nextWord string
-			if i < len(p.quoteWords)-1 {
-				nextWord = p.quoteWords[i+1]
-			}
-			p.quoteWords[i] = transforms.FixArticle(p.quoteWords[i], nextWord)
+		// Apply a/an transformation inside quotes before formatting
+		for i := 0; i < len(p.quoteWords)-1; i++ {
+			p.quoteWords[i] = transforms.FixArticle(p.quoteWords[i], p.quoteWords[i+1])
 		}
 
 		quoted := formatters.FormatQuote(p.quoteWords)
 
-		if p.output.Len() > 0 && !endsWithSpace(p.output.String()) {
-			p.output.WriteString(" ")
+		// If the output doesn't end with a space, add one.
+		// This handles cases like "said: '...'"
+		if p.output.Len() > 0 {
+			lastChar := p.output.String()[p.output.Len()-1]
+			if lastChar != ' ' && lastChar != '\'' {
+				p.output.WriteString(" ")
+			}
 		}
 		p.output.WriteString(quoted)
 
 		p.inQuote = false
+		p.lastProcessedWasWord = false // Exiting a quote, not a word
 		p.quoteWords = make([]string, 0)
 	}
 }
@@ -190,92 +207,49 @@ func (p *Processor) handleQuote() {
 func (p *Processor) flushBuffer() {
 	for i := 0; i < len(p.wordBuffer); i++ {
 		word := p.wordBuffer[i]
+		nextWord := ""
 
 		// Check a/an rule
-		if i < len(p.wordBuffer)-1 {
-			var nextWord string
-			// Look ahead for the next actual word, skipping over any invalid modifiers treated as text
-			for j := i + 1; j < len(p.wordBuffer); j++ {
-				nextWord = p.wordBuffer[j]
-				break
+		if i < len(p.wordBuffer)-1 { // If there's a next word in the current buffer
+			nextWord = p.wordBuffer[i+1]
+		} else { // This is the last word in wordBuffer, need to peek ahead in p.tokens
+			// Find the next actual word in the main token stream
+			for j := p.pos; j < len(p.tokens); j++ {
+				potentialNextToken := p.tokens[j]
+				if !isModifier(potentialNextToken) && !isPunctuation(potentialNextToken) && potentialNextToken != "'" && potentialNextToken != "" {
+					nextWord = potentialNextToken
+					break
+				}
 			}
+		}
+
+		// Apply FixArticle
+		if nextWord != "" {
 			word = transforms.FixArticle(word, nextWord)
 		}
 
-		// Add spacing
-		if p.output.Len() > 0 {
-			lastChar := p.output.String()[p.output.Len()-1]
-			if lastChar != ' ' && !isPunctuationChar(byte(lastChar)) {
-				p.output.WriteString(" ")
-			} else if isPunctuationChar(byte(lastChar)) {
-				p.output.WriteString(" ")
-			}
+		if p.output.Len() > 0 && !endsWithSpace(p.output.String()) {
+			// Ensure there's a space between words, unless it's punctuation
+			p.output.WriteString(" ")
 		}
-
 		p.output.WriteString(word)
 	}
 
 	p.wordBuffer = make([]string, 0)
 }
 
-// Tokenize splits input into tokens
+// tokenize function remains the same
 func tokenize(input string) []string {
-	var tokens []string
-	var current strings.Builder
-	inParens := false
-
-	for _, ch := range input {
-		switch ch {
-		case '(':
-			current.WriteRune(ch)
-			inParens = true
-		case ')':
-			current.WriteRune(ch)
-			inParens = false
-			// Complete the token and add it
-			if current.Len() > 0 {
-				tokens = append(tokens, current.String())
-				current.Reset()
-			}
-		case ' ', '\t', '\n', '\r':
-			if inParens {
-				// Keep spaces inside parentheses
-				current.WriteRune(ch)
-			} else {
-				// Space outside parentheses - end token
-				if current.Len() > 0 {
-					tokens = append(tokens, current.String())
-					current.Reset()
-				}
-			}
-		case '\'':
-			if current.Len() > 0 {
-				tokens = append(tokens, current.String())
-				current.Reset()
-			}
-			tokens = append(tokens, string(ch))
-		case '.', ',', '!', '?', ':', ';':
-			if inParens {
-				// Keep punctuation inside parentheses
-				current.WriteRune(ch)
-			} else {
-				// Punctuation outside parentheses - separate token
-				if current.Len() > 0 {
-					tokens = append(tokens, current.String())
-					current.Reset()
-				}
-				tokens = append(tokens, string(ch))
-			}
-		default:
-			current.WriteRune(ch)
-		}
+	re := regexp.MustCompile(`\s*([\.,!\?:;']|\([^\)]*\)|[^\s\(\)]+)\s*`)
+	matches := re.FindAllStringSubmatch(input, -1)
+	tokens := make([]string, len(matches))
+	for i, match := range matches {
+		tokens[i] = match[1]
 	}
-
-	if current.Len() > 0 {
-		tokens = append(tokens, current.String())
-	}
-
 	return tokens
+}
+func isLetter(r rune) bool {
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')
 }
 
 func isModifier(token string) bool {
@@ -298,18 +272,19 @@ func parseModifier(token string) (string, int) {
 	content := strings.TrimPrefix(strings.TrimSuffix(token, ")"), "(")
 	parts := strings.Split(content, ",")
 
-	modType := strings.TrimSpace(parts[0])
-	count := 1 // Default to 1 if no count is specified
+	modType := strings.TrimSpace(parts[0]) // Default to 1 if no count is specified
+	count := 1
 
 	if len(parts) > 1 {
 		fmt.Sscanf(strings.TrimSpace(parts[1]), "%d", &count)
-	} else if modType == "hex" || modType == "bin" {
-		count = 1 // These never have a count, ensure it's 1
+	} else if modType != "hex" && modType != "bin" && len(parts) == 1 {
+		// This is for single-word modifiers like (up), (low), (cap)
 	}
 
 	return modType, count
 }
 
+// isPunctuation checks if a string consists entirely of punctuation characters.
 func isPunctuation(token string) bool {
 	return len(token) == 1 && isPunctuationChar(token[0])
 }

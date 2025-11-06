@@ -15,7 +15,7 @@ func ToLower(s string) string {
 	return strings.ToLower(s)
 }
 
-// Capitalize capitalizes first letter and lowercases the rest
+// Capitalize capitalizes first letter only
 func Capitalize(s string) string {
 	if len(s) == 0 {
 		return s
