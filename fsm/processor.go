@@ -5,6 +5,7 @@ import (
 	"go-reloaded/formatters"
 	"go-reloaded/transforms"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -46,40 +47,51 @@ func (p *Processor) Process(input string) string {
 
 	for p.pos < len(p.tokens) {
 		token := p.tokens[p.pos]
+		trimmedToken := strings.TrimSpace(token)
 
-		// Skip empty tokens
-		if token == "" {
+		// Skip empty tokens after trimming
+		if trimmedToken == "" {
 			p.pos++
 			continue
 		}
 
 		// Handle quotes
-		if token == "'" {
+		if trimmedToken == "'" {
 			p.flushBuffer() // Flush any pending words before handling quote
 			p.handleQuote()
 			p.pos++
-			p.lastProcessedWasWord = false // A quote was just processed
+			// Don't override lastProcessedWasWord here - handleQuote sets it correctly
 			continue
 		}
 
-		// Check for modifiers
-		if isModifier(token) {
-			p.handleModifier(token)
-			p.pos++
-			p.lastProcessedWasWord = false // A modifier was just processed
-			continue
+		// Check for modifiers (only if last token was a word)
+		if isModifier(trimmedToken) {
+			targetBuffer := &p.wordBuffer
+			if p.inQuote {
+				targetBuffer = &p.quoteWords
+			}
+			// Only apply modifier if:
+			// 1. There's a word in the buffer AND
+			// 2. The last processed token was a word (not another modifier)
+			if len(*targetBuffer) > 0 && p.lastProcessedWasWord {
+				p.handleModifier(trimmedToken)
+				p.pos++
+				p.lastProcessedWasWord = false
+				continue
+			}
+			// Otherwise, treat it as regular text (fall through)
 		}
 		// Check for punctuation
-		if isPunctuation(token) {
+		if isPunctuation(trimmedToken) {
 			p.handlePunctuation()
 			continue // handlePunctuation advances pos
 		}
 
 		// Regular word
 		if p.inQuote {
-			p.quoteWords = append(p.quoteWords, token)
+			p.quoteWords = append(p.quoteWords, trimmedToken)
 		} else {
-			p.wordBuffer = append(p.wordBuffer, token) // Add to buffer
+			p.wordBuffer = append(p.wordBuffer, trimmedToken) // Add to buffer
 		}
 		p.lastProcessedWasWord = true // A word was just processed
 
@@ -98,31 +110,47 @@ func (p *Processor) handleModifier(modifier string) {
 		targetBuffer = &p.quoteWords
 	}
 
-	// If the last processed token was NOT a word, this modifier should be treated as text.
-	// This handles cases like "(cap) hello" or "word (up) (low)" where (low) should be text.
-	if !p.lastProcessedWasWord {
-		// Add the modifier as a literal word to the appropriate buffer
-		*targetBuffer = append(*targetBuffer, modifier)
-		return // And do not process it as a modifier
-	}
+		modType, count := parseModifier(modifier)
 
-	modType, count := parseModifier(modifier)
+	
 
-	switch modType {
-	case "hex":
-		idx := len(*targetBuffer) - 1
-		(*targetBuffer)[idx] = transforms.HexToDec((*targetBuffer)[idx])
-	case "bin":
-		idx := len(*targetBuffer) - 1
-		(*targetBuffer)[idx] = transforms.BinToDec((*targetBuffer)[idx])
-	case "up":
-		p.applyCase(transforms.ToUpper, count, targetBuffer)
-	case "low":
-		p.applyCase(transforms.ToLower, count, targetBuffer)
-	case "cap":
-		p.applyCase(transforms.Capitalize, count, targetBuffer)
-	}
-	p.lastProcessedWasWord = false // A modifier was just processed
+		switch modType {
+
+		case "hex":
+
+			idx := len(*targetBuffer) - 1
+
+			if idx >= 0 {
+
+				(*targetBuffer)[idx] = transforms.HexToDec((*targetBuffer)[idx])
+
+			}
+
+		case "bin":
+
+			idx := len(*targetBuffer) - 1
+
+			if idx >= 0 {
+
+				(*targetBuffer)[idx] = transforms.BinToDec((*targetBuffer)[idx])
+
+			}
+
+		case "up":
+
+			p.applyCase(transforms.ToUpper, count, targetBuffer)
+
+		case "low":
+
+			p.applyCase(transforms.ToLower, count, targetBuffer)
+
+		case "cap":
+
+			p.applyCase(transforms.Capitalize, count, targetBuffer)
+
+		}
+
+		p.lastProcessedWasWord = false // A modifier was just processed
 }
 
 func (p *Processor) applyCase(fn func(string) string, count int, buffer *[]string) {
@@ -178,7 +206,7 @@ func (p *Processor) handleQuote() {
 	if !p.inQuote {
 		p.flushBuffer()
 		p.inQuote = true
-		p.lastProcessedWasWord = false // Entering a quote, not a word
+		p.lastProcessedWasWord = false
 		p.quoteWords = make([]string, 0)
 	} else {
 		// Apply a/an transformation inside quotes before formatting
@@ -188,18 +216,12 @@ func (p *Processor) handleQuote() {
 
 		quoted := formatters.FormatQuote(p.quoteWords)
 
-		// If the output doesn't end with a space, add one.
-		// This handles cases like "said: '...'"
-		if p.output.Len() > 0 {
-			lastChar := p.output.String()[p.output.Len()-1]
-			if lastChar != ' ' && lastChar != '\'' {
-				p.output.WriteString(" ")
-			}
-		}
-		p.output.WriteString(quoted)
+		// Add quoted text to word buffer instead of directly to output
+		// This allows modifiers after the quote to transform it
+		p.wordBuffer = append(p.wordBuffer, quoted)
 
 		p.inQuote = false
-		p.lastProcessedWasWord = false // Exiting a quote, not a word
+		p.lastProcessedWasWord = true // Treat quoted text as a word
 		p.quoteWords = make([]string, 0)
 	}
 }
@@ -238,13 +260,24 @@ func (p *Processor) flushBuffer() {
 	p.wordBuffer = make([]string, 0)
 }
 
-// tokenize function remains the same
+// tokenize function with contraction and hyphenated word support
 func tokenize(input string) []string {
-	re := regexp.MustCompile(`\s*([\.,!\?:;']|\([^\)]*\)|[^\s\(\)]+)\s*`)
-	matches := re.FindAllStringSubmatch(input, -1)
-	tokens := make([]string, len(matches))
-	for i, match := range matches {
-		tokens[i] = match[1]
+	// Updated regex to handle:
+	// - Contractions: "Let's", "It's", "don't"
+	// - Hyphenated words: "well-known", "state-of-the-art"
+	// - Slash compounds: "a/an", "and/or"
+	// - Modifiers: (hex), (up, 2)
+	// - Punctuation: . , ! ? : ;
+	// - Quotes: '
+	re := regexp.MustCompile(`(\w+(?:[-'/]\w+)*|[.,!?:;']|\(\s*\w+\s*(?:,\s*\d+\s*)?\))`)
+	matches := re.FindAllString(input, -1)
+
+	var tokens []string
+	for _, match := range matches {
+		trimmedMatch := strings.TrimSpace(match)
+		if trimmedMatch != "" {
+			tokens = append(tokens, trimmedMatch)
+		}
 	}
 	return tokens
 }
@@ -276,7 +309,20 @@ func parseModifier(token string) (string, int) {
 	count := 1
 
 	if len(parts) > 1 {
-		fmt.Sscanf(strings.TrimSpace(parts[1]), "%d", &count)
+		countStr := strings.TrimSpace(parts[1])
+		if countStr == "" {
+			// If the count string is empty, default to 1 and log a warning
+			fmt.Printf("Warning: Empty count in modifier '%s', defaulting to 1\n", token)
+			count = 1
+		} else {
+			var err error
+			count, err = strconv.Atoi(countStr)
+			if err != nil {
+				// Log the error if strconv.Atoi fails, then default to 1
+				fmt.Printf("Error parsing count '%s' in modifier '%s': %v, defaulting to 1\n", countStr, token, err)
+				count = 1
+			}
+		}
 	} else if modType != "hex" && modType != "bin" && len(parts) == 1 {
 		// This is for single-word modifiers like (up), (low), (cap)
 	}
