@@ -47,6 +47,22 @@ func (p *Processor) Process(input string) string {
 
 	for p.pos < len(p.tokens) {
 		token := p.tokens[p.pos]
+
+		// Handle newlines first (before trimming)
+		if token == "\n" {
+			p.flushBuffer()
+			// Trim trailing space before newline
+			if p.output.Len() > 0 && p.output.String()[p.output.Len()-1] == ' ' {
+				currentOutput := p.output.String()
+				p.output.Reset()
+				p.output.WriteString(strings.TrimRight(currentOutput, " "))
+			}
+			p.output.WriteString("\n")
+			p.pos++
+			p.lastProcessedWasWord = false
+			continue
+		}
+
 		trimmedToken := strings.TrimSpace(token)
 
 		// Skip empty tokens after trimming
@@ -81,6 +97,7 @@ func (p *Processor) Process(input string) string {
 			}
 			// Otherwise, treat it as regular text (fall through)
 		}
+
 		// Check for punctuation
 		if isPunctuation(trimmedToken) {
 			p.handlePunctuation()
@@ -101,7 +118,11 @@ func (p *Processor) Process(input string) string {
 	// Flush remaining words
 	p.flushBuffer()
 
-	return strings.TrimSpace(p.output.String())
+	// Trim only leading/trailing spaces, preserve internal newlines
+	result := p.output.String()
+	result = strings.TrimRight(result, " \t")
+	result = strings.TrimLeft(result, " \t")
+	return result
 }
 
 func (p *Processor) handleModifier(modifier string) {
@@ -269,14 +290,19 @@ func tokenize(input string) []string {
 	// - Modifiers: (hex), (up, 2)
 	// - Punctuation: . , ! ? : ;
 	// - Quotes: '
-	re := regexp.MustCompile(`(\w+(?:[-'/]\w+)*|[.,!?:;']|\(\s*\w+\s*(?:,\s*\d+\s*)?\))`)
+	// - Newlines: \n
+	re := regexp.MustCompile(`(\w+(?:[-'/]\w+)*|[.,!?:;']|\(\s*\w+\s*(?:,\s*\d+\s*)?\)|\n)`)
 	matches := re.FindAllString(input, -1)
 
 	var tokens []string
 	for _, match := range matches {
-		trimmedMatch := strings.TrimSpace(match)
-		if trimmedMatch != "" {
-			tokens = append(tokens, trimmedMatch)
+		if match == "\n" {
+			tokens = append(tokens, "\n")
+		} else {
+			trimmedMatch := strings.TrimSpace(match)
+			if trimmedMatch != "" {
+				tokens = append(tokens, trimmedMatch)
+			}
 		}
 	}
 	return tokens
