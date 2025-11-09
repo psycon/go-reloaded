@@ -17,3 +17,16 @@ func FormatQuote(words []string) string {
 	// Multiple words: join with spaces and wrap
 	return "'" + strings.Join(words, " ") + "'"
 }
+
+// FormatDoubleQuote formats words between double quotes
+func FormatDoubleQuote(words []string) string {
+	if len(words) == 0 {
+		return "\"\""
+	}
+
+	if len(words) == 1 {
+		return "\"" + words[0] + "\""
+	}
+
+	return "\"" + strings.Join(words, " ") + "\""
+}

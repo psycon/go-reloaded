@@ -1,0 +1,32 @@
+Edge case 1: Multiple consecutive modifiers word (up) (low) (cap) should only apply first.
+Edge case 2: Modifier at start (cap) hello world should keep modifier as text.
+Edge case 3: Empty quotes ' ' should output empty quotes.
+Edge case 4: Nested-like quotes ' outer ' inner ' outer ' test.
+Edge case 5: All punctuation ... !!! ??? ,,, ::: ;;; grouping test.
+Edge case 6: Hex/bin edge cases: FF (hex) equals 11111111 (bin) which is 255 (hex).
+Edge case 7: Article a/an with modifiers: a (up) apple becomes AN (up) but a (cap) elephant.
+Edge case 8: Contractions don't, won't, can't, it's, let's should stay together.
+Edge case 9: Hyphenated well-known state-of-the-art words stay together.
+Edge case 10: Slash compounds a/an and/or either/or stay together.
+Edge case 11: Mixed quotes "double ' single ' nested" and 'single " double " nested'.
+Edge case 12: Large batch (up, 20) with only 5 words should uppercase all 5.
+Edge case 13: Punctuation boundary test: one, two, three (up, 5) only affects three.
+Edge case 14: Quote with batch ' one two three ' (up, 5) affects words before quote too.
+Edge case 15: Newline preservation
+across multiple
+lines with modifiers (cap, 3).
+Edge case 16: Invalid hex ZZZ (hex) and invalid bin 102 (bin) stay unchanged.
+Edge case 17: Zero values 0 (hex) and 0 (bin) both equal zero.
+Edge case 18: Article before vowels: a apple, a elephant, a hour, a honest man.
+Edge case 19: Article before consonants: a book, a cat, a dog stays unchanged.
+Edge case 20: Unicode-like café, naïve, résumé (up) should work.
+Edge case 21: Multiple spaces     between     words     normalize.
+Edge case 22: Trailing punctuation word!!! word??? word... groups correctly.
+Edge case 23: Quote at end of sentence ' final quote ' .
+Edge case 24: Empty input after modifiers: (up) (low) (cap) with nothing.
+Edge case 25: Very long word supercalifragilisticexpialidocious (up) works.
+Edge case 26: Numbers in words abc123 (hex) def456 (bin) stay as-is.
+Edge case 27: Special article cases: a university, a European, a one-time event.
+Edge case 28: Batch beyond buffer (cap, 100) with 3 words capitalizes all 3.
+Edge case 29: Consecutive punctuation .,!?:; without spaces formats correctly.
+Edge case 30: Final stress test: 1A (hex) warriors said ' a (up) honest (low) tale (cap) ' (up, 10) ... truly EPIC (low, 1) story!

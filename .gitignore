@@ -11,6 +11,9 @@ go-reloaded
 
 # Output coverage
 *.out
+*.prof
+coverage.out
+coverage.html
 
 # Go workspace file
 go.work
@@ -29,10 +32,11 @@ Thumbs.db
 # Output files
 result.txt
 output.txt
-*.txt
-!sample.txt
-!test*.txt
+output*.txt
+*_output.txt
 
-# Temporary files
-temp/
-tmp/
+# Checkpoint files
+*.checkpoint
+
+# Test outputs
+stress_output.txt

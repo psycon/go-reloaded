@@ -1,0 +1,8 @@
+Behold 1f4 (hex) warriors and 101001 (bin) enemies marching ... slowly ,but surely !!
+He whispered ' the END is NEAR ' (low, 3) ,or maybe not (up) ?
+" a hero (cap) rises " they said, yet a unseen force stopped him.
+A hour ago, a elephant walked into a hotel (cap, 5) unexpectedly.
+THIS (low, 4) LINE HAS (up, 2) mixed COMMANDS (low, 5) to test priority.
+The ' quick brown fox ' (up, 3) jumped over the ' lazy dog ' (cap, 2)!
+It was ' a dark (cap) and stormy (up, 2) night ' ,truly (low, 4) poetic !
+Three dots ... or maybe !? punctuation should test spacing ,and emotion !! 

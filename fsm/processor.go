@@ -23,6 +23,7 @@ type Processor struct {
 	//temp buffer for quoted words
 	quoteWords           []string
 	lastProcessedWasWord bool // Tracks if the last token processed was a word (not punctuation, modifier, or quote)
+	isDoubleQuote        bool // Tracks if current quote is double quote
 }
 
 func NewProcessor() *Processor {
@@ -71,12 +72,10 @@ func (p *Processor) Process(input string) string {
 			continue
 		}
 
-		// Handle quotes
-		if trimmedToken == "'" {
-			p.flushBuffer() // Flush any pending words before handling quote
+		// Handle quotes (both single and double)
+		if trimmedToken == "'" || trimmedToken == "\"" {
 			p.handleQuote()
 			p.pos++
-			// Don't override lastProcessedWasWord here - handleQuote sets it correctly
 			continue
 		}
 
@@ -179,13 +178,13 @@ func (p *Processor) applyCase(fn func(string) string, count int, buffer *[]strin
 		count = 1
 	}
 
-	start := len(*buffer) - count
-	if start < 0 {
-		start = 0
-	}
-
-	for i := start; i < len(*buffer); i++ {
-		(*buffer)[i] = fn((*buffer)[i])
+	// Count actual words (skip quote markers)
+	wordCount := 0
+	for i := len(*buffer) - 1; i >= 0 && wordCount < count; i-- {
+		if (*buffer)[i] != "'QUOTE_START'" && (*buffer)[i] != "'QUOTE_END'" && (*buffer)[i] != "\"QUOTE_START\"" && (*buffer)[i] != "\"QUOTE_END\"" {
+			(*buffer)[i] = fn((*buffer)[i])
+			wordCount++
+		}
 	}
 }
 
@@ -225,7 +224,12 @@ func (p *Processor) handlePunctuation() {
 }
 func (p *Processor) handleQuote() {
 	if !p.inQuote {
-		p.flushBuffer()
+		// Check if it's a double quote
+		if p.tokens[p.pos] == "\"" {
+			p.isDoubleQuote = true
+		} else {
+			p.isDoubleQuote = false
+		}
 		p.inQuote = true
 		p.lastProcessedWasWord = false
 		p.quoteWords = make([]string, 0)
@@ -235,47 +239,90 @@ func (p *Processor) handleQuote() {
 			p.quoteWords[i] = transforms.FixArticle(p.quoteWords[i], p.quoteWords[i+1])
 		}
 
-		quoted := formatters.FormatQuote(p.quoteWords)
-
-		// Add quoted text to word buffer instead of directly to output
-		// This allows modifiers after the quote to transform it
-		p.wordBuffer = append(p.wordBuffer, quoted)
+		// Add quote marker with type
+		if p.isDoubleQuote {
+			p.wordBuffer = append(p.wordBuffer, "\"QUOTE_START\"")
+		} else {
+			p.wordBuffer = append(p.wordBuffer, "'QUOTE_START'")
+		}
+		p.wordBuffer = append(p.wordBuffer, p.quoteWords...)
+		if p.isDoubleQuote {
+			p.wordBuffer = append(p.wordBuffer, "\"QUOTE_END\"")
+		} else {
+			p.wordBuffer = append(p.wordBuffer, "'QUOTE_END'")
+		}
 
 		p.inQuote = false
-		p.lastProcessedWasWord = true // Treat quoted text as a word
+		p.lastProcessedWasWord = true
 		p.quoteWords = make([]string, 0)
 	}
 }
 
 func (p *Processor) flushBuffer() {
+	inQuoteSection := false
+	quoteWords := []string{}
+	isDouble := false
+
 	for i := 0; i < len(p.wordBuffer); i++ {
 		word := p.wordBuffer[i]
-		nextWord := ""
 
-		// Check a/an rule
-		if i < len(p.wordBuffer)-1 { // If there's a next word in the current buffer
-			nextWord = p.wordBuffer[i+1]
-		} else { // This is the last word in wordBuffer, need to peek ahead in p.tokens
-			// Find the next actual word in the main token stream
-			for j := p.pos; j < len(p.tokens); j++ {
-				potentialNextToken := p.tokens[j]
-				if !isModifier(potentialNextToken) && !isPunctuation(potentialNextToken) && potentialNextToken != "'" && potentialNextToken != "" {
-					nextWord = potentialNextToken
-					break
+		// Handle quote markers
+		if word == "'QUOTE_START'" || word == "\"QUOTE_START\"" {
+			inQuoteSection = true
+			isDouble = (word == "\"QUOTE_START\"")
+			quoteWords = []string{}
+			continue
+		}
+		if word == "'QUOTE_END'" || word == "\"QUOTE_END\"" {
+			inQuoteSection = false
+			// Format and output the quote
+			var quoted string
+			if isDouble {
+				quoted = formatters.FormatDoubleQuote(quoteWords)
+			} else {
+				quoted = formatters.FormatQuote(quoteWords)
+			}
+			if p.output.Len() > 0 && !endsWithSpace(p.output.String()) {
+				p.output.WriteString(" ")
+			}
+			p.output.WriteString(quoted)
+			quoteWords = []string{}
+			continue
+		}
+
+		if inQuoteSection {
+			// Collect words inside quote
+			quoteWords = append(quoteWords, word)
+		} else {
+			// Regular word outside quote
+			nextWord := ""
+
+			// Check a/an rule
+			if i < len(p.wordBuffer)-1 {
+				nextWord = p.wordBuffer[i+1]
+				if (nextWord == "'QUOTE_START'" || nextWord == "\"QUOTE_START\"") && i+2 < len(p.wordBuffer) {
+					nextWord = p.wordBuffer[i+2]
+				}
+			} else {
+				// Peek ahead in tokens
+				for j := p.pos; j < len(p.tokens); j++ {
+					potentialNextToken := p.tokens[j]
+					if !isModifier(potentialNextToken) && !isPunctuation(potentialNextToken) && potentialNextToken != "'" && potentialNextToken != "\"" && potentialNextToken != "" {
+						nextWord = potentialNextToken
+						break
+					}
 				}
 			}
-		}
 
-		// Apply FixArticle
-		if nextWord != "" {
-			word = transforms.FixArticle(word, nextWord)
-		}
+			if nextWord != "" && nextWord != "'QUOTE_START'" && nextWord != "'QUOTE_END'" && nextWord != "\"QUOTE_START\"" && nextWord != "\"QUOTE_END\"" {
+				word = transforms.FixArticle(word, nextWord)
+			}
 
-		if p.output.Len() > 0 && !endsWithSpace(p.output.String()) {
-			// Ensure there's a space between words, unless it's punctuation
-			p.output.WriteString(" ")
+			if p.output.Len() > 0 && !endsWithSpace(p.output.String()) {
+				p.output.WriteString(" ")
+			}
+			p.output.WriteString(word)
 		}
-		p.output.WriteString(word)
 	}
 
 	p.wordBuffer = make([]string, 0)
@@ -289,9 +336,10 @@ func tokenize(input string) []string {
 	// - Slash compounds: "a/an", "and/or"
 	// - Modifiers: (hex), (up, 2)
 	// - Punctuation: . , ! ? : ;
-	// - Quotes: '
+	// - Quotes: ' and "
 	// - Newlines: \n
-	re := regexp.MustCompile(`(\w+(?:[-'/]\w+)*|[.,!?:;']|\(\s*\w+\s*(?:,\s*\d+\s*)?\)|\n)`)
+	// Use Unicode-aware word matching to support accented characters
+	re := regexp.MustCompile(`([\p{L}\p{N}_]+(?:[-'/][\p{L}\p{N}_]+)*|[.,!?:;'"]|\(\s*\w+\s*(?:,\s*\d+\s*)?\)|\n)`)
 	matches := re.FindAllString(input, -1)
 
 	var tokens []string
@@ -308,7 +356,7 @@ func tokenize(input string) []string {
 	return tokens
 }
 func isLetter(r rune) bool {
-	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || r > 127 // Include Unicode letters
 }
 
 func isModifier(token string) bool {

@@ -34,19 +34,22 @@ It was the best of times, it was the worst of TIMES
 
 ## Key Features
 
-- **Number base conversions**: `(hex)`, `(bin)`
-- **Case transformations**: `(up)`, `(low)`, `(cap)`
-- **Batch operations**: `(up, N)` - apply to N previous words
-- **Smart punctuation**: Automatic spacing and grouping
-- **Quote handling**: Single and multiple word quotes
-- **Article correction**: `a` → `an` before vowels/h
+- **Number base conversions**: `(hex)`, `(bin)` - Convert hexadecimal and binary to decimal
+- **Case transformations**: `(up)`, `(low)`, `(cap)` - Uppercase, lowercase, capitalize
+- **Batch operations**: `(up, N)` - Apply transformations to N previous words
+- **Smart punctuation**: Automatic spacing and grouping (`. , ! ? : ;`)
+- **Quote handling**: Both single `'` and double `"` quotes with modifier support
+- **Article correction**: `a` → `an` before vowels and silent 'h'
+- **Special word support**: Contractions (don't, it's), hyphenated (well-known), slash compounds (a/an)
+- **Newline preservation**: Maintains original line structure
+- **Punctuation boundaries**: Modifiers respect punctuation as semantic boundaries
 
 ---
 
 ## Project Structure
 
 ```
-/Users/con/zone01/go-reloaded/
+/go-reloaded/
 ├───.gitignore
 ├───AGENTS.md
 ├───AUTHORS.md
@@ -116,12 +119,25 @@ Comprehensive documentation including:
 # Run all tests
 go test ./...
 
-# Run with coverage
-go test -cover ./...
+# Run with verbose output
+go test -v ./tests
 
-# Run specific test suite
-go test ./tests/transforms_test.go
+# Run specific test
+go test -v ./tests -run TestSpecificName
+
+# Run stress test
+go run . stress_test.txt stress_output.txt
+
+# Build executable
+go build -o go-reloaded .
 ```
+
+**Test Coverage:**
+- ✅ 100+ unit tests
+- ✅ Integration tests
+- ✅ Golden test suite
+- ✅ Edge case tests
+- ✅ Stress tests with 30+ scenarios
 
 For detailed test cases, see `docs/ANALYSIS.md`.
 
@@ -145,6 +161,32 @@ Constantine E.P.
 
 ---
 
+## Advanced Features
+
+### Batch Modifiers with Quotes
+Batch modifiers count words across quotes:
+```
+Input:  one two ' three four ' (up, 4)
+Output: ONE TWO 'THREE FOUR'
+```
+
+### Punctuation as Boundaries
+Punctuation marks (`. , ! ? : ;`) act as semantic boundaries:
+```
+Input:  one two, three four (up, 3)
+Output: one two, THREE FOUR
+```
+Only words after the comma are affected.
+
+### Quote Type Preservation
+Single and double quotes are preserved:
+```
+Input:  ' single ' and " double "
+Output: 'single' and "double"
+```
+
+---
+
 ## License
 
-Educational project for learning purposes.
+MIT License - See LICENSE file for details.
