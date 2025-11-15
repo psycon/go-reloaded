@@ -41,104 +41,170 @@ The text passes through a series of independent filters/stages:
 
 ---
 
-<span style="color: #FFD700;">### FSM (Finite State Machine) Architecture</span>
+<span style="color: #FFD700;">### FSM-Orchestrated Pipeline Architecture (Hybrid)</span>
 
 **How it works:**
-The program is always in a specific "state" and reads the input character-by-character or token-by-token. Depending on the current state and the next input, it changes state and executes actions.
+The program combines FSM state management with a functional transformation pipeline. The FSM controller orchestrates the flow, while pure functions handle the actual transformations. This hybrid approach provides the context awareness of FSM with the modularity of pipeline architecture.
 
-**Core States:**
-- `READING_WORD`: Collecting characters of a word
-- `WORD_COMPLETE`: Word finished, checking for modifiers
-- `IN_QUOTES`: Tracking if we're inside quotes
-- `READING_MODIFIER`: Reading (hex), (up), etc.
-- `HANDLE_PUNCTUATION`: Applying punctuation rules
+**Core State Variables:**
+- `inQuote`: Boolean tracking if currently inside quotes
+- `lastProcessedWasWord`: Boolean determining modifier eligibility
+- `isDoubleQuote`: Boolean preserving quote type
+- `wordBuffer`: Slice accumulating words between boundaries
+- `quoteWords`: Slice for isolated quote context
+- `output`: StringBuilder for final result
 
 **Advantages:**
 -  **Single pass** - reads the text only once
 -  **Memory efficient** - doesn't create intermediate copies
--  **Context awareness** - the state machine "remembers" where it is (inside quotes, after modifier, etc.)
--  **Natural fit** - text parsing is a classic FSM problem
+-  **Context awareness** - FSM tracks state (inside quotes, after modifier, etc.)
+-  **Modular design** - pure transformation functions are reusable and testable
 -  **Faster execution** - O(n) complexity with minimal overhead
--  **Easier debugging** - you know exactly which state you're in
+-  **Easier debugging** - clear separation between control flow and logic
 -  **Scalability** - handles large files efficiently
--  **Industry standard** - compilers, parsers, and lexers all use FSM
+-  **Best of both worlds** - FSM intelligence + Pipeline modularity
 
 **Disadvantages:**
-- More complex initial design
-- Requires careful thinking about state transitions
-- Harder to modify after initial implementation
-- Steeper learning curve for beginners
+- More complex than pure pipeline
+- Requires understanding both FSM and functional patterns
+- State management adds cognitive overhead
+- Not a "textbook" pure FSM implementation
 
 
 <div align="center">
 
-### FSM Architecture Diagram
+### Architecture Diagram
+
+For detailed architecture flowchart with mermaid diagram, see:
+**[ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)**
 
 <img src="../assets/fsm flow diagram.png" alt="FSM Flow Diagram" width="800"/>
 
 </div>
+
+---
+
+<span style="color: #FFD700;">### Actual Implementation: Hybrid Model</span>
+
+**What We Built:**
+The final implementation is a **pragmatic hybrid** that combines:
+
+1. **FSM Component** (`fsm/processor.go`):
+   - State variables: `inQuote`, `lastProcessedWasWord`, `isDoubleQuote`
+   - Token-by-token processing loop
+   - State-based routing (if token is quote, modifier, punctuation, etc.)
+   - Buffer management and flushing logic
+
+2. **Pipeline Component** (`transforms/`, `formatters/`):
+   - Pure, stateless transformation functions
+   - `HexToDec()`, `ToUpper()`, `FixArticle()`, etc.
+   - Called by FSM when needed
+   - Independently testable
+
+**Why This Works Better:**
+- FSM provides the "intelligence" (context, state, routing)
+- Pipeline provides the "operations" (transformations, formatting)
+- Clean separation makes code maintainable
+- Each component can be tested independently
+- Easier to extend with new transformations
+
+**Not Pure FSM Because:**
+- Transformations are external function calls, not embedded in state handlers
+- No explicit state transition table
+- Uses functional programming patterns alongside state management
+
+**Not Pure Pipeline Because:**
+- Single pass (not multiple stages)
+- Stateful processing (tracks context)
+- Dynamic routing based on state
+
+This hybrid approach is common in real-world text processors and compilers.
 
 
 ---
 
 
 <a name="why-fsm"></a>
-### <span style="color: #CCFF99;">2. **Why FSM? My personal choice:**</span>
-## 2. Why FSM
+### <span style="color: #CCFF99;">2. **Why Hybrid FSM-Pipeline? Design Decision:**</span>
+## 2. Why Hybrid Architecture
 
-1. **Performance**: For text processing, single-pass FSM is objectively faster
-2. **Memory**: For large files, the memory difference is significant
-3. **Natural Design**: Text parsing is a natural FSM problem - it mimics how one thinks when reading
-4. **Context Handling**: Many rules depend on context (am I inside quotes? did I just see a modifier?). FSM handles this naturally
-5. **Industry Standard**: Compilers, parsers, lexers - all use FSM
-6. **Learning Value**: More educational and professional approach
-7. **Extensibility**: Adding new states is more maintainable than adding pipeline stages
-8. **Real-time Processing**: Can process streams without buffering entire input
+**The Pragmatic Choice:**
+While a pure FSM was initially considered, the implementation evolved into a hybrid FSM-orchestrated pipeline for practical reasons:
 
-The **tradeoff** of complexity is worth it for the benefits that FSM offers in this project.
+1. **FSM for Control**: State management, context tracking, token routing
+2. **Pipeline for Logic**: Pure, testable, reusable transformation functions
+3. **Separation of Concerns**: Control flow separate from business logic
+4. **Testability**: Each transformation can be unit tested independently
+5. **Maintainability**: Changes to transformations don't affect state machine
+6. **Reusability**: Transform functions can be used outside FSM context
+7. **Industry Pattern**: Similar to compiler design (lexer + parser + transformer)
+
+**Why Not Pure FSM?**
+- Would embed all logic in state handlers
+- Harder to test individual transformations
+- Less modular and reusable
+- More monolithic codebase
+
+**Why Not Pure Pipeline?**
+- Multiple passes through text
+- Harder to maintain context
+- Less efficient for large files
+- Difficult to handle nested structures (quotes)
+
+The **hybrid approach** combines the strengths of both patterns while minimizing their weaknesses.
 
 ---
 
-**State Flow:**
+**Processing Flow:**
 ```
-START → READING_WORD → WORD_COMPLETE → CHECK_MODIFIER
-                                      ↓
-                              [Modifier Found]
-                                      ↓
-                              APPLY_TRANSFORMATION → OUTPUT
-                                                        ↓
-                                                   BACK_TO_READ
-
-Alternative paths:
-- PUNCTUATION → FORMAT_PUNCT → OUTPUT → BACK_TO_READ
-- QUOTE_START → IN_QUOTES → QUOTE_END → OUTPUT → BACK_TO_READ
-- SPACE → CHECK_CONTEXT → OUTPUT → BACK_TO_READ
+Input Text
+    ↓
+[Tokenizer] → Token Stream
+    ↓
+[FSM Controller] → State-based routing
+    ↓
+[Buffers] → wordBuffer, quoteWords
+    ↓
+[Transform Pipeline] → transforms/* (pure functions)
+    ↓
+[Format Pipeline] → formatters/* (pure functions)
+    ↓
+[Output Builder] → Assembled result
+    ↓
+Processed Text
 ```
 
 **Context Management:**
-- **Word Buffer**: Maintains last N words for batch transformations
-- **Quote State**: Boolean flag tracking if inside quotes
-- **Previous Token**: Remembers last processed token for punctuation rules
-- **Modifier Stack**: Stores pending modifiers to apply
+- **Word Buffer**: Accumulates words between punctuation boundaries
+- **Quote Buffer**: Isolated context for quoted text
+- **State Flags**: `inQuote`, `lastProcessedWasWord`, `isDoubleQuote`
+- **Punctuation Boundaries**: Flush buffer on `. , ! ? : ;`
+
+**Architecture Diagram:**
+See [ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md) for detailed mermaid flowchart.
 
 ---
 
-<span style="color: #FFD700;">### Why Separation of Concerns?</span>
+<span style="color: #FFD700;">### Separation of Concerns</span>
 
 The project structure separates **orchestration** (FSM) from **business logic** (transforms/formatters):
 
 ```
-fsm/          → Controls state transitions and flow
-   ↓ uses
-transforms/   → Pure functions: hex/bin conversions, case changes
-formatters/   → Pure functions: punctuation, quote formatting
+fsm/processor.go     → FSM Controller (state management, routing)
+        ↓ calls
+transforms/          → Pure functions (hex/bin, case, article)
+        ↓ and
+formatters/          → Pure functions (quotes, punctuation)
+        ↓ return to
+fsm/processor.go     → Assembles output
 ```
 
 **Benefits:**
 1. **Reusability**: Transforms can be used independently of FSM
 2. **Testability**: Unit test pure functions without FSM overhead
 3. **Maintainability**: Changes to logic don't affect state machine
-4. **Extensibility**: Easy to add Pipeline architecture using same transforms
+4. **Extensibility**: Easy to add new transformations
+5. **Clarity**: Clear distinction between "what to do" (FSM) and "how to do it" (transforms)
 
 ---
 
@@ -400,7 +466,7 @@ the word (up) was then (cap) followed by another (low) transformation and FF (he
 
 **Expected Output:**
 ```
-the WORD was then Followed by another transformation and 255 things.
+the WORD was Then followed by another transformation and 255 things.
 ```
 
 **Covers:** Multiple different modifiers, hex at end
@@ -482,7 +548,7 @@ it (cap) was a amazing DAY (low) ! the sun was shining and the temperature reach
 
 **Expected Output:**
 ```
-It was an amazing day! the sun was shining and the temperature reached 31 degrees. I went to the store, bought 3 apples and AN orange. the shopkeeper said: 'you are an honest customer'. when i got home, i realized that 5 plus 10 equals 15! what a Discovery... i could not believe it!? this was The Best Day Ever.
+It was an amazing day! the sun was shining and the temperature reached 31 degrees. I went to the store, bought 3 apples and AN orange. the shopkeeper said: 'you are an honest customer'. when i got home, i realized that 5 plus 10 equals 15! what a DISCOVERY... i could not believe it!? this was The Best Day EVER.
 ```
 
 **Covers:**
@@ -589,4 +655,4 @@ Constantine E.P.
 
 ## License
 
-Educational project for learning purposes.
+MIT License - See [LICENSE](../LICENSE) file for details.

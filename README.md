@@ -2,8 +2,17 @@
 
 <span style="color: #CCFF99;">## Overview</span>
 
-This project implements a text processing tool that reads an input file, applies transformations and formatting rules, and writes the result to an output file using **FSM (Finite State Machine) architecture**.
-The program recognizes special modifiers within the text and applies the corresponding transformations to previous words. Additionally, it automatically corrects punctuation, spacing around punctuation marks, and handles special cases such as quotes and article correction (a/an).
+Go-Reloaded is an intelligent text processing tool that transforms and formats text using a **hybrid FSM-orchestrated pipeline architecture**. The program reads an input file, processes it through a single-pass state machine that routes tokens to pure transformation functions, and writes the formatted result to an output file.
+
+**What it does:**
+- Applies modifiers like `(up)`, `(hex)`, `(cap)` to transform preceding words
+- Automatically corrects grammar (a → an before vowels)
+- Formats punctuation and quotes with proper spacing
+- Handles special cases: contractions, hyphenated words, Unicode characters
+- Preserves document structure (newlines, quote types)
+
+**How it works:**
+The FSM controller maintains context (quote state, word history) while routing tokens to stateless transformation functions. Punctuation marks act as semantic boundaries, ensuring modifiers only affect their intended scope. This hybrid approach combines the context awareness of state machines with the modularity of functional pipelines.
 
 ---
 
@@ -145,13 +154,27 @@ For detailed test cases, see `docs/ANALYSIS.md`.
 
 ## Architecture Highlight
 
-This project uses **FSM (Finite State Machine)** architecture for:
--  Single-pass processing (O(n) efficiency)
--  Context-aware transformations
--  Memory efficiency
--  Industry-standard approach for text parsing
+This project uses a **hybrid FSM-orchestrated pipeline architecture**:
 
-For detailed architecture analysis, see `docs/ANALYSIS.md`.
+**FSM Controller** (State Management):
+-  Single-pass token processing
+-  Context tracking (quotes, modifiers, boundaries)
+-  State-based routing decisions
+
+**Transformation Pipeline** (Pure Functions):
+-  Modular, testable transformations
+-  Reusable components
+-  Clean separation of concerns
+
+**Benefits:**
+-  O(n) time complexity
+-  Memory efficient (no intermediate copies)
+-  Maintainable and extensible
+-  Industry-standard patterns (lexer + transformer)
+
+For detailed architecture analysis and diagrams, see:
+- `docs/ANALYSIS.md` - Architecture comparison and design decisions
+- `docs/ARCHITECTURE_DIAGRAM.md` - Mermaid flowchart and component breakdown
 
 ---
 
