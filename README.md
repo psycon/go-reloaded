@@ -60,26 +60,26 @@ It was the best of times, it was the worst of TIMES
 ```
 /go-reloaded/
 ├───.gitignore
-├───AGENTS.md
-├───AUTHORS.md
 ├───go.mod
+├───LICENSE
 ├───main.go
 ├───README.md
-├───test.txt
 ├───assets/
-│   ├───.gitkeep
 │   └───fsm flow diagram.png
+├───audit/
 ├───docs/
-│   └───ANALYSIS.md
+│   ├───AGENTS.md
+│   ├───ANALYSIS.md
+│   ├───ARCHITECTURE_DIAGRAM.md
+│   ├───AUTHORS.md
+│   └───gh-pages/
+│       └───index.html
 ├───formatters/
-│   ├───.gitkeep
 │   ├───punctuation.go
 │   └───quotes.go
 ├───fsm/
-│   ├───.gitkeep
 │   └───processor.go
 ├───tasks/
-│   ├───.gitkeep
 │   ├───TASK-01.md
 │   ├───TASK-02.md
 │   ├───TASK-03.md
@@ -90,16 +90,15 @@ It was the best of times, it was the worst of TIMES
 │   ├───TASK-08.md
 │   └───TASK-09-10.md
 ├───tests/
-│   ├───.gitkeep
-│   ├───documentation_test.go
-│   ├───fsm_test.go
+│   ├───stress_test.txt
+│   ├───test.txt
 │   ├───formatters_test.go
+│   ├───fsm_test.go
 │   ├───golden_test.go
 │   ├───integration_test.go
 │   ├───main_test.go
 │   └───transforms_test.go
 └───transforms/
-    ├───.gitkeep
     ├───article.go
     ├───cases.go
     └───numbers.go
@@ -135,7 +134,7 @@ go test -v ./tests
 go test -v ./tests -run TestSpecificName
 
 # Run stress test
-go run . stress_test.txt stress_output.txt
+go run . tests/stress_test.txt tests/stress_output.txt
 
 # Build executable
 go build -o go-reloaded .
