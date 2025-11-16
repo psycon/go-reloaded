@@ -79,19 +79,18 @@ func (p *Processor) Process(input string) string {
 			continue
 		}
 
-		// Check for modifiers (only if last token was a word)
+		// Check for modifiers - apply if buffer has words
 		if isModifier(trimmedToken) {
 			targetBuffer := &p.wordBuffer
 			if p.inQuote {
 				targetBuffer = &p.quoteWords
 			}
-			// Only apply modifier if:
-			// 1. There's a word in the buffer AND
-			// 2. The last processed token was a word (not another modifier)
-			if len(*targetBuffer) > 0 && p.lastProcessedWasWord {
+			// Apply modifier if buffer has words (allow chaining)
+			if len(*targetBuffer) > 0 {
 				p.handleModifier(trimmedToken)
 				p.pos++
-				p.lastProcessedWasWord = false
+				// Keep lastProcessedWasWord = true to allow next modifier to chain
+				p.lastProcessedWasWord = true
 				continue
 			}
 			// Otherwise, treat it as regular text (fall through)
@@ -130,47 +129,26 @@ func (p *Processor) handleModifier(modifier string) {
 		targetBuffer = &p.quoteWords
 	}
 
-		modType, count := parseModifier(modifier)
+	modType, count := parseModifier(modifier)
 
-	
-
-		switch modType {
-
-		case "hex":
-
-			idx := len(*targetBuffer) - 1
-
-			if idx >= 0 {
-
-				(*targetBuffer)[idx] = transforms.HexToDec((*targetBuffer)[idx])
-
-			}
-
-		case "bin":
-
-			idx := len(*targetBuffer) - 1
-
-			if idx >= 0 {
-
-				(*targetBuffer)[idx] = transforms.BinToDec((*targetBuffer)[idx])
-
-			}
-
-		case "up":
-
-			p.applyCase(transforms.ToUpper, count, targetBuffer)
-
-		case "low":
-
-			p.applyCase(transforms.ToLower, count, targetBuffer)
-
-		case "cap":
-
-			p.applyCase(transforms.Capitalize, count, targetBuffer)
-
+	switch modType {
+	case "hex":
+		idx := len(*targetBuffer) - 1
+		if idx >= 0 {
+			(*targetBuffer)[idx] = transforms.HexToDec((*targetBuffer)[idx])
 		}
-
-		p.lastProcessedWasWord = false // A modifier was just processed
+	case "bin":
+		idx := len(*targetBuffer) - 1
+		if idx >= 0 {
+			(*targetBuffer)[idx] = transforms.BinToDec((*targetBuffer)[idx])
+		}
+	case "up":
+		p.applyCase(transforms.ToUpper, count, targetBuffer)
+	case "low":
+		p.applyCase(transforms.ToLower, count, targetBuffer)
+	case "cap":
+		p.applyCase(transforms.Capitalize, count, targetBuffer)
+	}
 }
 
 func (p *Processor) applyCase(fn func(string) string, count int, buffer *[]string) {
@@ -339,7 +317,7 @@ func tokenize(input string) []string {
 	// - Quotes: ' and "
 	// - Newlines: \n
 	// Use Unicode-aware word matching to support accented characters
-	re := regexp.MustCompile(`([\p{L}\p{N}_]+(?:[-'/][\p{L}\p{N}_]+)*|[.,!?:;'"]|\(\s*\w+\s*(?:,\s*\d+\s*)?\)|\n)`)
+	re := regexp.MustCompile(`([\p{L}\p{N}_]+(?:[-'/→][\p{L}\p{N}_]+)*|[.,!?:;'"]|\(\s*\w+\s*(?:,\s*\d+\s*)?\)|\n)`)
 	matches := re.FindAllString(input, -1)
 
 	var tokens []string
@@ -355,10 +333,6 @@ func tokenize(input string) []string {
 	}
 	return tokens
 }
-func isLetter(r rune) bool {
-	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || r > 127 // Include Unicode letters
-}
-
 func isModifier(token string) bool {
 	if !strings.HasPrefix(token, "(") || !strings.HasSuffix(token, ")") {
 		return false
@@ -406,12 +380,11 @@ func parseModifier(token string) (string, int) {
 
 // isPunctuation checks if a string consists entirely of punctuation characters.
 func isPunctuation(token string) bool {
-	return len(token) == 1 && isPunctuationChar(token[0])
-}
-
-func isPunctuationChar(ch byte) bool {
-	return ch == '.' || ch == ',' || ch == '!' ||
-		ch == '?' || ch == ':' || ch == ';'
+	if len(token) != 1 {
+		return false
+	}
+	ch := token[0]
+	return ch == '.' || ch == ',' || ch == '!' || ch == '?' || ch == ':' || ch == ';'
 }
 
 func endsWithSpace(s string) bool {

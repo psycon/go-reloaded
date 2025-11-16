@@ -137,8 +137,8 @@ func TestGolden_RegressionSuite(t *testing.T) {
 	}{
 		{
 			name:     "double modifier application",
-			input:    "word (up) (low)", // Second modifier should be treated as text
-			expected: "WORD (low)",
+			input:    "word (up) (low)", // Modifiers chain: up then low
+			expected: "word",
 		},
 		{
 			name:     "quote with punctuation inside",

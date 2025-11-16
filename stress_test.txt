@@ -1,4 +1,4 @@
-Edge case 1: Multiple consecutive modifiers word (up) (low) (cap) should only apply first.
+Edge case 1: Multiple consecutive modifiers word (up) (low) (cap) should chain: WORD→word→Word.
 Edge case 2: Modifier at start (cap) hello world should keep modifier as text.
 Edge case 3: Empty quotes ' ' should output empty quotes.
 Edge case 4: Nested-like quotes ' outer ' inner ' outer ' test.
